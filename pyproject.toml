@@ -1,0 +1,70 @@
+[build-system]
+requires = ["setuptools>=67.5.1", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+namespaces = true
+where = ["src"]
+
+[project]
+name = "oggmap"
+version = "0.0.1"
+description = "extract orthologous maps (short: orthomap) from OrthoFinder output for query species"
+authors = [
+    {name = "Kristian K Ullrich", email="ullrich@evolbio.mpg.de"},
+    {name = "Nikoleta E Glynatsi", email="glynatsi@evolbio.mpg.de"},
+]
+maintainers = [
+    {name = "Kristian K Ullrich", email="ullrich@evolbio.mpg.de"},
+]
+license = {text = "GPLv3"}
+readme = "README.md"
+requires-python = ">=3.8"
+keywords = ["orthomap", "gene age", "orthologs", "phylostratigraphy", "single-cell"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Education",
+]
+dependencies = [
+    "setuptools>=67.5.1",
+    "numpy<1.24",
+    "numba",
+    "scipy",
+    "pandas>=1.5.3",
+    "ete3",
+    "anndata",
+    "scanpy>=1.9.3",
+    "seaborn",
+    "statannot",
+    "harmonypy>=0.0.9",
+    "louvain>=0.8.0",
+    "umap-learn>=0.5.3",
+    "alive-progress",
+    "biopython",
+    "wget>=3.2",
+    "pytest",
+    "pip",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/kullrich/oggmap"
+"Bug Tracker" = "https://github.com/kullrich/oggmap/issues"
+documentation = "https://oggmap.readthedocs.io/en/latest/"
+repository = "https://github.com/kullrich/oggmap"
+
+[project.scripts]
+oggmap = "oggmap.__main__:main"
+cds2aa = "oggmap.cds2aa:main"
+eggnog2orthomap = "oggmap.eggnog2orthomap:main"
+plaza2orthomap = "oggmap.plaza2orthomap:main"
+orthomcl2orthomap = "oggmap.orthomcl2orthomap:main"
+gtf2t2g = "oggmap.gtf2t2g:main"
+ncbitax = "oggmap.ncbitax:main"
+of2orthomap = "oggmap.of2orthomap:main"
+qlin = "oggmap.qlin:main"
