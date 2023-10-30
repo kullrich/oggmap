@@ -1,0 +1,6 @@
+__title__ = "oggmap"
+__version__ = "0.0.1"
+__author__ = "Kristian K Ullrich"
+__email__ = "ullrich@evolbio.mpg.de"
+__license__ = "GPL-3"
+__copyright__ = "Copyright 2023 Max Planck Society for the Advancement of Science"
