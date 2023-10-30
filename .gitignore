@@ -1,0 +1,31 @@
+# Docs
+/docs/_build/
+/docs/generated/
+/docs/notebooks/data/
+/docs/data/
+
+# tests
+/.cache/
+/.pytest_cache/
+
+# always-ignore extensions
+*~
+
+# Python build files
+__pycache__/
+/dist/
+/build/
+/scanpy.egg-info/
+/*-env/
+/env-*/
+src/oggmap.egg-info/
+
+# OS stuff
+.DS_Store
+Thumbs.db
+.ipynb_checkpoints/
+.directory
+
+# IDEs and editors
+/.idea/
+/.vscode/
