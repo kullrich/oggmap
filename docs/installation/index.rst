@@ -42,7 +42,7 @@ Singularity image
 
 ::
 
-    singularity pull kkuweb/oggmap_ubuntu:latest
+    singularity pull docker://kkuweb/oggmap_ubuntu:latest
 
 - This docker image was built based on Ubuntu 22.04.
 - Python dependent packages and oggmap are installed in an anaconda environment, `oggmap_env`. This environment needs to be activated when you log in.
