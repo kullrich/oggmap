@@ -18,6 +18,10 @@ Oggmap results (gene ages per orthologous group) can be further used to calculat
 
 Online documentation can be found [here](https://oggmap.readthedocs.io/en/latest/).
 
+When using `oggmap` in published research, please cite:
+
+- Ullrich KK, Glytnasi NE, "oggmap: a Python package to extract gene ages per orthogroup and link them with single-cell RNA data", Bioinformatics, 2023, 39(11). [https://doi.org/10.1093/bioinformatics/btad657](https://doi.org/10.1093/bioinformatics/btad657)
+
 ## Installing `oggmap`
 
 More installation options can be found [here](https://oggmap.readthedocs.io/en/latest/installation/index.html).

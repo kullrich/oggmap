@@ -8,7 +8,7 @@ Cite oggmap
 
 If you use oggmap please cite::
 
-    Kristian Ullrich, Nikoleta E. Glynatsi, oggmap, (2023), GitHub repository,
+    Ullrich KK, Glynatsi NE, "oggmap: a Python package to extract gene ages per orthogroup and link them with single-cell RNA data", Bioinformatics, 2023, 39(11). `https://doi.org/10.1093/bioinformatics/btad657 <https://doi.org/10.1093/bioinformatics/btad657>`_
 
 Development team
 -----------------
