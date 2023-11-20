@@ -6,6 +6,7 @@
 [![PyPI - Wheel](https://img.shields.io/pypi/wheel/oggmap)](https://pypi.org/project/oggmap/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![docs-badge](https://readthedocs.org/projects/oggmap/badge/?version=latest)](https://oggmap.readthedocs.io/en/latest/?badge=latest)
+[![DOI](https://img.shields.io/badge/DOI-10.1093/bioinformatics/btad657-blue)](https://doi.org/10.1093/bioinformatics/btad657)
 
 ## orthologous maps - evolutionary age index
 
