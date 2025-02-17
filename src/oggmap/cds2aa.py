@@ -65,6 +65,8 @@ def add_argparse_args(parser: argparse.ArgumentParser):
                         default=1)
     parser.add_argument('-r',
                         help='specify CDS source to retain longest isoform')
+    parser.add_argument('-s',
+                        help='shorten all sequences to multiple of three', action='store_true')
 
 
 transtable = {1: CodonTable.CodonTable(forward_table={
@@ -1407,7 +1409,8 @@ def get_gene_len_dict(record_iter,
 
 
 def cds2aa_record(record_iter,
-                  codontable):
+                  codontable,
+                  shorten):
     """
     This function translates nucleotide to amino acids assuming that cds is in frame 0.
 
@@ -1416,6 +1419,7 @@ def cds2aa_record(record_iter,
 
     :param record_iter: Sequence iterable.
     :param codontable: A CodonTable.
+    :param shorten: boolean.
     :return: Sequence object.
 
     :type record_iter: Bio.SeqIO.FastaIO.FastaIterator
@@ -1430,10 +1434,23 @@ def cds2aa_record(record_iter,
     >>> records_aa = cds2aa.cds2aa_record(record_iter=records, codontable=cds2aa.transtable[1])
     """
     for record in record_iter:
-        aa = SeqIO.SeqRecord(record.seq.translate(codontable),
-                             name=record.name,
-                             id=record.name,
-                             description=record.name)
+        if shorten:
+            record_mod =  len(record.seq) % 3
+            if record_mod != 0:
+                aa = SeqIO.SeqRecord(record.seq[record_mod:].translate(codontable),
+                                     name=record.name,
+                                     id=record.name,
+                                     description=record.name)
+            else:
+                aa = SeqIO.SeqRecord(record.seq.translate(codontable),
+                                     name=record.name,
+                                     id=record.name,
+                                     description=record.name)
+        else:
+            aa = SeqIO.SeqRecord(record.seq.translate(codontable),
+                                 name=record.name,
+                                 id=record.name,
+                                 description=record.name)
         yield aa
 
 
@@ -1461,7 +1478,7 @@ def main():
                                                  args.r)
         record_iter = iter([x[1] for x in record_gene_len_dict.values()])
     cds2aa_iter = cds2aa_record(record_iter,
-                                transtable[args.t])
+                                transtable[args.t], args.shorten)
     if args.o is None:
         SeqIO.write(cds2aa_iter,
                     sys.stdout,
