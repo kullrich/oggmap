@@ -3,6 +3,7 @@
 
 import os
 import argparse
+from unittest.mock import patch
 from oggmap import ncbitax
 
 
@@ -17,7 +18,8 @@ def test_update_ncbi():
     path_exist = os.path.exists(path)
     if not path_exist:
         update_parser = ncbitax.define_parser()
-        update_args = update_parser.parse_args()
+        with patch("sys.argv", ["ncbitax"]):  # Prevent pytest from injecting arguments
+            update_args = update_parser.parse_args([])
         update_args.outdir = os.path.expanduser('/tmp')
         update_args.dbname = os.path.expanduser('/tmp/taxadb.sqlite')
         update_args.force = True
