@@ -1,6 +1,6 @@
 """
 Author: Kristian K Ullrich
-date: April 2023
+date: February 2025
 email: ullrich@evolbio.mpg.de
 License: GPL-3
 """

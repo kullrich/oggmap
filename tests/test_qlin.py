@@ -1,9 +1,10 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 
+import os
 import argparse
 import pandas as pd
-from ete3 import Tree
+from Bio.Phylo.Newick import Tree
 from oggmap import qlin
 
 
@@ -14,7 +15,8 @@ def test_define_parser():
 
 def test_get_qlin_q_argument():
     q = 'Danio rerio'
-    info = qlin.get_qlin(q=q)
+    info = qlin.get_qlin(q=q,
+                         dbname=os.path.expanduser('/tmp/taxadb.sqlite'))
     assert isinstance(info, list)
     assert info[0] == q
     assert isinstance(info[3], dict)
@@ -26,7 +28,8 @@ def test_get_qlin_q_argument():
 
 def test_get_qlin_qt_argument():
     qt = '7955'
-    info = qlin.get_qlin(qt=qt)
+    info = qlin.get_qlin(qt=qt,
+                         dbname=os.path.expanduser('/tmp/taxadb.sqlite'))
     assert isinstance(info, list)
     assert info[1] == int(qt)
     assert isinstance(info[3], dict)
@@ -39,7 +42,9 @@ def test_get_qlin_qt_argument():
 def test_get_qlin_q_and_qt_argument():
     q = 'Danio rerio'
     qt = '7955'
-    info = qlin.get_qlin(q=q, qt=qt)
+    info = qlin.get_qlin(q=q,
+                         qt=qt,
+                         dbname=os.path.expanduser('/tmp/taxadb.sqlite'))
     assert isinstance(info, list)
     assert info[0] == q
     assert info[1] == int(qt)
@@ -50,7 +55,9 @@ def test_get_qlin_q_with_wrong_qt_argument():
     based on the taxid."""
     q = 'Danio rerio'
     qt = '7956'
-    info = qlin.get_qlin(q=q, qt=qt)
+    info = qlin.get_qlin(q=q,
+                         qt=qt,
+                         dbname=os.path.expanduser('/tmp/taxadb.sqlite'))
     assert isinstance(info, list)
     assert info[0] != q
     assert info[1] == int(qt)
@@ -58,7 +65,8 @@ def test_get_qlin_q_with_wrong_qt_argument():
 
 def test_lineage_topo():
     qt = '7955'
-    tree = qlin.get_lineage_topo(qt)
+    tree = qlin.get_lineage_topo(qt=qt,
+                                 dbname=os.path.expanduser('/tmp/taxadb.sqlite'))
     assert isinstance(tree, Tree)
 
 

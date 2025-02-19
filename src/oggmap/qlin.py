@@ -4,16 +4,20 @@
 
 """
 Author: Kristian K Ullrich
-date: April 2023
+date: February 2025
 email: ullrich@evolbio.mpg.de
 License: GPL-3
 """
 
 
+import os
 import sys
 import argparse
 import pandas as pd
-from ete3 import NCBITaxa, Tree
+from taxadb2.taxid import TaxID
+from taxadb2.names import SciName
+from Bio import Phylo
+from io import StringIO
 
 
 def define_parser():
@@ -28,10 +32,10 @@ def define_parser():
 
     # get query lineage to be used with oggmap later on using query species taxID
     # Mus musculus; 10090
-    $ qlin -qt 10090
+    $ qlin -qt 10090 -dbname taxadb.sqlite
 
     # using query species name
-    $ qlin -q "Mus musculus"
+    $ qlin -q "Mus musculus" -dbname taxadb.sqlite
     '''
     parser = argparse.ArgumentParser(
         prog='qlin',
@@ -55,12 +59,97 @@ def add_argparse_args(parser: argparse.ArgumentParser):
                         help='query species name')
     parser.add_argument('-qt',
                         help='query species taxID')
+    parser.add_argument('-dbname',
+                        help='taxadb.sqlite file')
+
+def traverse_postorder(clade):
+    """
+    Yield each clade (node) in a post-order traversal (children before parent)
+
+    :param clade: A Clade object from a Bio.Phylo.Newick.Tree.
+
+    :type clade: Bio.Phylo.Newick.Clade
+    """
+    if hasattr(clade, "clades"):
+        for child in clade.clades:
+            yield from traverse_postorder(child)
+    yield clade
 
 
-def get_qlin(ncbi=None,
-             q=None,
+def load_taxadb(ncbi, dbname):
+    """
+    Load taxadb.sqlite database or exit if neither ncbi nor dbname are provided.
+
+    :param ncbi: Existing ncbi dictionary, if any.
+    :param dbname: Path to taxadb.sqlite file.
+
+    :rtype: dict
+    """
+    if ncbi is None and dbname is None:
+        sys.exit('\nPlease provide path to taxadb.sqlite file')
+    if ncbi is None and dbname is not None:
+        if not os.path.exists(dbname):
+            raise FileNotFoundError(f"Database file '{dbname}' not found.")
+        ncbi = {
+            'taxid': TaxID(dbtype='sqlite', dbname=dbname),
+            'names': SciName(dbtype='sqlite', dbname=dbname)
+        }
+    return ncbi
+
+
+def ncbi_get_lineage(qt,
+                     ncbi=None,
+                     dbname=None):
+    """
+    This function returns a species lineage for a query species given as taxID.
+
+    :param qt: The taxID of the queried species.
+    :param ncbi: The NCBI taxonomic database.
+    :param dbname: Specify taxadb.sqlite file.
+
+    :type qt: str
+    :type ncbi: dict
+    :type dbname: str
+    :rtype: list
+    """
+    ncbi = load_taxadb(ncbi=ncbi, dbname=dbname)
+    taxid2name = ncbi['taxid'].sci_name(qt)
+    qtid = ncbi['names'].taxid(taxid2name)
+    qlineage = [1] + ncbi['taxid'].lineage_id(qtid, reverse=True)
+    return qlineage
+
+
+def ncbi_get_taxid_translator(qt_vec,
+                              ncbi=None,
+                              dbname=None):
+    """
+    This function returns a dictionary for a vector of taxIDs as integers.
+
+    :param qt_vec: A vector of taxIDs as integers.
+    :param ncbi: The NCBI taxonomic database.
+    :param dbname: Specify taxadb.sqlite file.
+
+    :type qt_vec: list of int
+    :type ncbi: dict
+    :type dbname: str
+    :rtype: dict
+    """
+    ncbi = load_taxadb(ncbi=ncbi, dbname=dbname)
+    if not isinstance(qt_vec, list):
+        sys.exit('\nqt_vec needs to be a vector of taxIDs as integers')
+    else:
+        qt_vec = [int(x) for x in qt_vec]
+    taxid2names = [ncbi['taxid'].sci_name(qt) for qt in qt_vec]
+    qtids = [ncbi['names'].taxid(taxid2name) for taxid2name in taxid2names]
+    translations = dict(zip(qtids, taxid2names))
+    return translations
+
+
+def get_qlin(q=None,
              qt=None,
-             quiet=False):
+             quiet=False,
+             ncbi=None,
+             dbname=None):
     """
     This function searches the NCBI taxonomic database for results matching the
     query name or query taxID.
@@ -68,42 +157,60 @@ def get_qlin(ncbi=None,
     Note that if the user specifies both the name and the taxID of a species,
     the returning result is based on the taxID.
 
-    :param ncbi: The NCBI taxonomic database.
     :param q: The name of the queried species.
     :param qt: The taxID of the queried species.
     :param quiet: Specify if output should be quiet.
+    :param ncbi: The NCBI taxonomic database.
+    :param dbname: Specify taxadb.sqlite file.
     :return: A list of information for the queried species such as:
              query name, query taxID, query lineage, query lineage dictionary, query lineage zip,
              query lineage names, reverse query lineage, query kingdom
 
-    :type ncbi: ete3.NCBITaxa
     :type q: str
     :type qt: str
     :type quiet: bool
+    :type ncbi: dict
+    :type dbname: str
     :rtype: list
 
     Example
     -------
-    >>> from ete3 import NCBITaxa
     >>> from oggmap import qlin
-    >>> qlin.get_qlin(q='Danio rerio')
+    >>> qlin.get_qlin(q='Danio rerio',
+    >>>               dbname='taxadb.sqlite')
     """
+    ncbi = load_taxadb(ncbi=ncbi, dbname=dbname)
     qtid = None
     qname = None
     qk = None
-    if ncbi is None:
-        ncbi = NCBITaxa()
+    #if ncbi is None:
+        #ncbi = NCBITaxa()
     if qt:
-        taxid2name = ncbi.get_taxid_translator([int(qt)])
-        qtid, \
-            qname = list(taxid2name.items())[0]
+        #taxid2name = ncbi.get_taxid_translator([int(qt)])
+        #taxid2name = taxid.sci_name(qt)
+        taxid2name = ncbi['taxid'].sci_name(qt)
+        #qtid, \
+        #    qname = list(taxid2name.items())[0]
+        #qtid = names.taxid(taxid2name)
+        qtid = ncbi['names'].taxid(taxid2name)
+        qname = taxid2name
     if q and not qt:
-        name2taxid = ncbi.get_name_translator([q])
-        qname, \
-            qtid = list(name2taxid.items())[0]
-        qtid = qtid[0]
-    qlineage = ncbi.get_lineage(qtid)
-    qlineagenames_dict = ncbi.get_taxid_translator(qlineage)
+        #name2taxid = ncbi.get_name_translator([q])
+        #name2taxid = names.taxid(q)
+        name2taxid = ncbi['names'].taxid(q)
+        #qname, \
+        #    qtid = list(name2taxid.items())[0]
+        #qtid = qtid[0]
+        #qname = taxid.sci_name(name2taxid)
+        qname = ncbi['taxid'].sci_name(name2taxid)
+        qtid = name2taxid
+    #qlineage = ncbi.get_lineage(qtid)
+    #qlineage = [1]+taxid.lineage_id(qtid, reverse=True)
+    qlineage = [1] + ncbi['taxid'].lineage_id(qtid, reverse=True)
+    #qlineagen = ['root'] + taxid.lineage_name(qtid, reverse=True)
+    qlineagen = ['root'] + ncbi['taxid'].lineage_name(qtid, reverse=True)
+    #qlineagenames_dict = ncbi.get_taxid_translator(qlineage)
+    qlineagenames_dict = dict(zip(qlineage, qlineagen))
     qlineagezip = [(a, qlineagenames_dict[a]) for a in qlineage]
     qlineagenames = pd.DataFrame([(x, y, qlineagenames_dict[y]) for x, y in enumerate(qlineage)],
                                  columns=['PSnum',
@@ -137,29 +244,40 @@ def get_qlin(ncbi=None,
             qk]
 
 
-def get_lineage_topo(qt):
+def get_lineage_topo(qt,
+                     ncbi=None,
+                     dbname=None):
     """
     This function returns a species lineage as a tree object for a query species given as taxID.
 
     :param qt: The taxID of the queried species.
-    :return: The lineage of the queried species as an ete3.Tree.
+    :param ncbi: The NCBI taxonomic database.
+    :param dbname: Specify taxadb.sqlite file.
+    :return: The lineage of the queried species as a Bio.Phylo.Newick.Tree.
 
     :type qt: str
-    :rtype: ete3.Tree
+    :type ncbi: dict
+    :type dbname: str
+    :rtype: Bio.Phylo.Newick.Tree
 
     Example
     -------
     >>> from oggmap import qlin
-    >>> lineage_tree = qlin.get_lineage_topo(qt='10090')
+    >>> lineage_tree = qlin.get_lineage_topo(qt='10090',
+    >>>                                      dbname='taxadb.sqlite')
     >>> lineage_tree
     """
     _, _, _, _, _, qlineagenames, _, _ = get_qlin(qt=qt,
-                                                  quiet=True)
+                                                  quiet=True,
+                                                  ncbi=ncbi,
+                                                  dbname=dbname)
     qln = list(qlineagenames[['PSnum',
                               'PStaxID',
                               'PSname']].apply(lambda x: '/'.join(x), axis=1))
     qln = [x.replace('(', '_').replace(')', '_').replace(':', '_') for x in qln]
-    tree = Tree('(' * len(qln) + ''.join([str(x) + '),' for x in qln[1::][::-1]])+str(qln[0])+');')
+    #tree = Tree('(' * len(qln) + ''.join([str(x) + '),' for x in qln[1::][::-1]])+str(qln[0])+');')
+    newick_str = '(' * len(qln) + ''.join([str(x) + '),' for x in qln[1::][::-1]]) + str(qln[0]) + ');'
+    tree = Phylo.read(StringIO(newick_str), 'newick')
     return tree
 
 
@@ -181,9 +299,11 @@ def get_youngest_common(ql,
     -------
     >>> from oggmap import qlin
     >>> # get query species taxonomic lineage information
-    >>> _, _, query_lineage, _, _, _, _, _ = qlin.get_qlin(q='Caenorhabditis elegans')
+    >>> _, _, query_lineage, _, _, _, _, _ = qlin.get_qlin(q='Caenorhabditis elegans',
+    >>>                                                    dbname='taxadb.sqlite')
     >>> # get target species taxonomic lineage information
-    >>> _, _, target_lineage, _, _, _, _, _ = qlin.get_qlin(q='Mus musculus')
+    >>> _, _, target_lineage, _, _, _, _, _ = qlin.get_qlin(q='Mus musculus',
+    >>>                                                     dbname='taxadb.sqlite')
     >>> # get youngest common node
     >>> qlin.get_youngest_common(ql=query_lineage, tl=target_lineage)
     """
@@ -210,9 +330,11 @@ def get_oldest_common(ql,
     -------
     >>> from oggmap import qlin
     >>> # get query species taxonomic lineage information
-    >>> _, _, query_lineage, _, _, _, _, _ = qlin.get_qlin(q='Caenorhabditis elegans')
+    >>> _, _, query_lineage, _, _, _, _, _ = qlin.get_qlin(q='Caenorhabditis elegans',
+    >>>                                                    dbname='taxadb.sqlite')
     >>> # get target species taxonomic lineage information
-    >>> _, _, target_lineage, _, _, _, _, _ = qlin.get_qlin(q='Mus musculus')
+    >>> _, _, target_lineage, _, _, _, _, _ = qlin.get_qlin(q='Mus musculus',
+    >>>                                                     dbname='taxadb.sqlite')
     >>> # get oldest common node
     >>> qlin.get_oldest_common(ql=query_lineage, tl=target_lineage)
     """
@@ -226,6 +348,9 @@ def main():
     parser = define_parser()
     args = parser.parse_args()
     print(args)
+    if not args.dbname:
+        print('\nError <-dbname> : Please specify taxadb.sqlite file')
+        sys.exit()
     if not args.q and not args.qt:
         parser.print_help()
         print('\nError <-q> <-qt>: Please specify query species name or taxID')
@@ -236,7 +361,8 @@ def main():
         sys.exit()
     get_qlin(q=args.q,
              qt=args.qt,
-             quiet=False)
+             quiet=False,
+             dbname=args.dbname)
 
 
 if __name__ == '__main__':

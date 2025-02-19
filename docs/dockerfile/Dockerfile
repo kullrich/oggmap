@@ -1,10 +1,11 @@
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
-LABEL version="0.0.1"
+LABEL version="0.0.2"
 LABEL description="oggmap docker installation"
 LABEL maintainer="ullrich@evolbio.mpg.de"
 
-RUN useradd docker \
+RUN apt-get update && apt-get install -y adduser \
+ && useradd docker \
  && mkdir /home/docker \
  && chown docker:docker /home/docker \
  && adduser docker staff
@@ -21,8 +22,8 @@ RUN apt-get update \
 RUN echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen \
  && locale-gen en_US.utf8 \
  && /usr/sbin/update-locale LANG=en_US.UTF-8 \
-ENV LC_ALL en_US.UTF-8
-ENV LANG en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+ENV LANG=en_US.UTF-8
 ENV TZ=Europe/Berlin
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN apt-get update \

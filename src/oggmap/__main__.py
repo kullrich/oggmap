@@ -4,7 +4,7 @@
 
 """
 Author: Kristian K Ullrich
-date: April 2023
+date: February 2025
 email: ullrich@evolbio.mpg.de
 License: GPL-3
 """
@@ -153,7 +153,7 @@ def main():
     The main function that is being called when `oggmap` is used via the terminal.
     """
     parser = define_parser()
-    args = parser.parse_args()
+    args: argparse.Namespace = parser.parse_args()
     if args.subcommand is None:
         parser.print_help()
         sys.exit()
@@ -216,7 +216,12 @@ def main():
             print('\nError <-u>: Please specify if you like to update <-u>')
             sys.exit()
         if args.u:
-            ncbitax.update_ncbi()
+            if not args.outdir:
+                parser.print_help()
+                print('\nError <-outdir>: Please specify outdir if you like to update <-outdir>')
+                sys.exit()
+            else:
+                ncbitax.update_ncbi(args)
     if args.subcommand == 'of2orthomap':
         print(args)
         if not args.seqname:

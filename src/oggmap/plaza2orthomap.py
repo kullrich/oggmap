@@ -4,7 +4,7 @@
 
 """
 Author: Kristian K Ullrich
-date: April 2023
+date: February 2025
 email: ullrich@evolbio.mpg.de
 License: GPL-3
 """
@@ -15,7 +15,6 @@ import argparse
 import pandas as pd
 import numpy as np
 from oggmap import of2orthomap, qlin
-from ete3 import NCBITaxa
 
 
 def define_parser():

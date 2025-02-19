@@ -4,7 +4,7 @@
 
 """
 Author: Kristian K Ullrich
-date: April 2023
+date: February 2025
 email: ullrich@evolbio.mpg.de
 License: GPL-3
 """
@@ -163,7 +163,7 @@ def parse_gtf(gtf,
     >>> from oggmap import datasets, gtf2t2g
     >>> # get gene to transcript table for Danio rerio
     >>> # https://ftp.ensembl.org/pub/release-105/gtf/danio_rerio/Danio_rerio.GRCz11.105.gtf.gz
-    >>> gtf_file = datasets.zebrafish_gtf(datapath='.')
+    >>> gtf_file = datasets.zebrafish_ensembl105_gtf(datapath='.')
     >>> query_species_t2g = gtf2t2g.parse_gtf(gtf=gtf_file,\
     >>>     g=True, b=True, p=True, v=True, s=True, q=True)
     >>> query_species_t2g
@@ -216,12 +216,12 @@ def parse_gtf(gtf,
                 _, gv_first = _information_based_on_key(infosplit=infosplit,
                                                         key='gene_version',
                                                         q=q,
-                                                        lines=line,
+                                                        lines=lines,
                                                         version=True)
                 _, tv_first = _information_based_on_key(infosplit=infosplit,
                                                         key='transcript_version',
                                                         q=q,
-                                                        lines=line,
+                                                        lines=lines,
                                                         version=True)
                 if gv_first:
                     gid_first_version = gid_first + '.' + gv_first

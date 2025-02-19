@@ -9,7 +9,7 @@ def test_title():
 
 
 def test_version():
-    assert oggmap.__version__ == '0.0.1'
+    assert oggmap.__version__ == '0.0.2'
 
 
 def test_license():

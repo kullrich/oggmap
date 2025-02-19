@@ -7,7 +7,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'oggmap'
-copyright = '2023, Max Planck Society for the Advancement of Science'
+copyright = '2025, Max Planck Society for the Advancement of Science'
 author = 'Kristian K Ullrich'
 
 #-- Path setup -----------------------------------------------------

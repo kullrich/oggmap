@@ -29,3 +29,8 @@ Thumbs.db
 # IDEs and editors
 /.idea/
 /.vscode/
+
+# tests
+ensembl_*
+taxadb.sqlite
+

@@ -4,7 +4,7 @@
 
 """
 Author: Kristian K Ullrich
-date: April 2023
+date: February 2025
 email: ullrich@evolbio.mpg.de
 License: GPL-3
 """
@@ -36,6 +36,9 @@ def define_parser():
 
     # translate and retain longest isoform from CDS fasta file:
     $ cds2aa -i Danio_rerio.GRCz11.cds.all.fa -r ENSEMBL -o Danio_rerio.GRCz11.aa.all.longest.fa
+    
+    # translate and retain longest isoform from CDS fasta file and shorten in case not multiple of three:
+    $ cds2aa -i Danio_rerio.GRCz11.cds.all.fa -r ENSEMBL -o Danio_rerio.GRCz11.aa.all.longest.fa -s
     '''
     parser = argparse.ArgumentParser(
         prog='cds2aa',
@@ -66,7 +69,8 @@ def add_argparse_args(parser: argparse.ArgumentParser):
     parser.add_argument('-r',
                         help='specify CDS source to retain longest isoform')
     parser.add_argument('-s',
-                        help='shorten all sequences to multiple of three', action='store_true')
+                        help='shorten all sequences to multiple of three',
+                        action='store_true')
 
 
 transtable = {1: CodonTable.CodonTable(forward_table={
@@ -1396,8 +1400,8 @@ def get_gene_len_dict(record_iter,
     """
     record_dict = {}
     for record in record_iter:
-        gene = get_gene(record.description,
-                        source)
+        gene = get_gene(description=record.description,
+                        source=source)
         if gene in record_dict:
             if record_dict[gene][0] < len(record):
                 record_dict[gene] = [len(record),
@@ -1410,7 +1414,7 @@ def get_gene_len_dict(record_iter,
 
 def cds2aa_record(record_iter,
                   codontable,
-                  shorten):
+                  shorten=False):
     """
     This function translates nucleotide to amino acids assuming that cds is in frame 0.
 
@@ -1419,11 +1423,12 @@ def cds2aa_record(record_iter,
 
     :param record_iter: Sequence iterable.
     :param codontable: A CodonTable.
-    :param shorten: boolean.
+    :param shorten: If Sequence should be shortened if not multiple of three.
     :return: Sequence object.
 
     :type record_iter: Bio.SeqIO.FastaIO.FastaIterator
     :type codontable: Bio.Data.CodonTable.CodonTable
+    :type shorten: bool
     :rtype: Bio.SeqIO.SeqRecord
 
     Example
@@ -1474,11 +1479,12 @@ def main():
         record_iter = SeqIO.parse(args.i,
                                   "fasta")
     if args.r:
-        record_gene_len_dict = get_gene_len_dict(record_iter,
-                                                 args.r)
+        record_gene_len_dict = get_gene_len_dict(record_iter=record_iter,
+                                                 source=args.r)
         record_iter = iter([x[1] for x in record_gene_len_dict.values()])
-    cds2aa_iter = cds2aa_record(record_iter,
-                                transtable[args.t], args.shorten)
+    cds2aa_iter = cds2aa_record(record_iter=record_iter,
+                                codontable=transtable[args.t],
+                                shorten=args.shorten)
     if args.o is None:
         SeqIO.write(cds2aa_iter,
                     sys.stdout,

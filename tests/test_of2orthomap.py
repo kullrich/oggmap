@@ -6,8 +6,8 @@ import pandas as pd
 from oggmap import datasets, of2orthomap
 
 
-ensembl105_oc, ensembl105_og, ensembl105_sl = datasets.ensembl105(datapath='/tmp')
-
+ensembl113_last_oc, ensembl113_last_og, ensembl113_last_sl = datasets.ensembl113_last(datapath='/tmp')
+dbname='/tmp/taxadb.sqlite'
 
 def test_define_parser():
     parse = of2orthomap.define_parser()
@@ -15,13 +15,14 @@ def test_define_parser():
 
 def test_of2orthomap_continuity_false():
     query_orthomap, orthofinder_species_list, of_species_abundance = of2orthomap.get_orthomap(
-        seqname='Danio_rerio.GRCz11.cds.longest',
+        seqname='7955.danio_rerio.pep',
         qt='7955',
-        oc=ensembl105_oc,
-        og=ensembl105_og,
-        sl=ensembl105_sl,
+        oc=ensembl113_last_oc,
+        og=ensembl113_last_og,
+        sl=ensembl113_last_sl,
         continuity=False,
-        quiet=True)
+        quiet=True,
+        dbname=dbname)
     assert isinstance(query_orthomap, pd.DataFrame)
     assert (query_orthomap.columns == ['seqID', 'Orthogroup', 'PSnum', 'PStaxID', 'PSname']).all()
     assert isinstance(orthofinder_species_list, pd.DataFrame)
@@ -32,13 +33,14 @@ def test_of2orthomap_continuity_false():
 
 def test_of2orthomap_continuity_true():
     query_orthomap, orthofinder_species_list, of_species_abundance = of2orthomap.get_orthomap(
-        seqname='Danio_rerio.GRCz11.cds.longest',
+        seqname='7955.danio_rerio.pep',
         qt='7955',
-        oc=ensembl105_oc,
-        og=ensembl105_og,
-        sl=ensembl105_sl,
+        oc=ensembl113_last_oc,
+        og=ensembl113_last_og,
+        sl=ensembl113_last_sl,
         continuity=True,
-        quiet=True)
+        quiet=True,
+        dbname=dbname)
     assert isinstance(query_orthomap, pd.DataFrame)
     assert (query_orthomap.columns == ['seqID', 'Orthogroup', 'PSnum', 'PStaxID', 'PSname', 'PScontinuity']).all()
     assert isinstance(orthofinder_species_list, pd.DataFrame)

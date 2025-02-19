@@ -4,7 +4,7 @@
 
 """
 Author: Kristian K Ullrich
-date: April 2023
+date: February 2025
 email: ullrich@evolbio.mpg.de
 License: GPL-3
 """
@@ -15,8 +15,10 @@ import sys
 import zipfile
 import argparse
 import pandas as pd
+from taxadb2.taxid import TaxID
+from taxadb2.names import SciName
+from Bio import Phylo
 from oggmap import qlin
-from ete3 import NCBITaxa
 
 
 def define_parser():
@@ -30,15 +32,15 @@ def define_parser():
     of2orthomap_example = '''of2orthomap example:
 
     # download OrthoFinder example:
-    $ wget https://zenodo.org/record/7796253/files/ensembl_105_orthofinder_Orthogroups.GeneCount.tsv.zip
-    $ wget https://zenodo.org/record/7796253/files/ensembl_105_orthofinder_Orthogroups.tsv.zip
-    $ wget https://zenodo.org/record/7796253/files/ensembl_105_orthofinder_species_list.tsv
+    $ wget https://zenodo.org/records/14680521/files/ensembl_113_orthofinder_last_Orthogroups.GeneCount.tsv.zip
+    $ wget https://zenodo.org/records/14680521/files/ensembl_113_orthofinder_last_Orthogroups.tsv.zip
+    $ wget https://zenodo.org/records/14680521/files/ensembl_113_orthofinder_last_species_list.tsv
     
     # extract orthomap:
     $ of2orthomap -seqname Danio_rerio.GRCz11.cds.longest -qt 7955 \\
-      -sl ensembl_105_orthofinder_species_list.tsv \\
-      -oc ensembl_105_orthofinder_Orthogroups.GeneCount.tsv.zip \\
-      -og ensembl_105_orthofinder_Orthogroups.tsv.zip
+      -sl ensembl_113_orthofinder_last_species_list.tsv \\
+      -oc ensembl_113_orthofinder_last_Orthogroups.GeneCount.tsv.zip \\
+      -og ensembl_113_orthofinder_last_Orthogroups.tsv.zip
     '''
     parser = argparse.ArgumentParser(
         prog='of2orthomap',
@@ -75,8 +77,9 @@ def add_argparse_args(parser: argparse.ArgumentParser):
                         default='orthomap.tsv')
     parser.add_argument('-overwrite',
                         help='specify if existing output file should be overwritten (default: True)',
-                        default=True,
-                        type=bool)
+                        action='store_true')
+    parser.add_argument('-dbname',
+                        help='taxadb.sqlite file')
 
 
 def get_orthomap(seqname,
@@ -87,7 +90,9 @@ def get_orthomap(seqname,
                  out=None,
                  quiet=False,
                  continuity=True,
-                 overwrite=True):
+                 overwrite=True,
+                 ncbi=None,
+                 dbname=None):
     """
     This function return an orthomap for a given query species and OrthoFinder input data.
 
@@ -100,6 +105,8 @@ def get_orthomap(seqname,
     :param quiet: Specify if output should be quiet.
     :param continuity: Specify if continuity score should be calculated.
     :param overwrite: Specify if output should be overwritten.
+    :param ncbi: The NCBI taxonomic database.
+    :param dbname: Specify taxadb.sqlite file.
     :return: A list of results such as:
              orthomap, species_list, youngest_common_counts
 
@@ -112,27 +119,31 @@ def get_orthomap(seqname,
     :type quiet: bool
     :type continuity: bool
     :type overwrite: bool
+    :type ncbi: dict
+    :type dbname: str
     :rtype: list
 
     Example
     -------
     >>> from oggmap import datasets, of2orthomap, qlin
-    >>> datasets.ensembl105(datapath='.')
+    >>> datasets.ensembl113_last(datapath='.')
     >>> query_orthomap, orthofinder_species_list, of_species_abundance = of2orthomap.get_orthomap(
-    >>>     seqname='Danio_rerio.GRCz11.cds.longest',
+    >>>     seqname='7955.danio_rerio.pep',
     >>>     qt='7955',
-    >>>     sl='ensembl_105_orthofinder_species_list.tsv',
-    >>>     oc='ensembl_105_orthofinder_Orthogroups.GeneCount.tsv',
-    >>>     og='ensembl_105_orthofinder_Orthogroups.tsv',
+    >>>     sl='ensembl_113_orthofinder_last_species_list.tsv',
+    >>>     oc='ensembl_113_orthofinder_last_Orthogroups.GeneCount.tsv.zip',
+    >>>     og='ensembl_113_orthofinder_last_Orthogroups.tsv.zip',
     >>>     out=None,
     >>>     quiet=False,
     >>>     continuity=True,
-    >>>     overwrite=True)
+    >>>     overwrite=True,
+    >>>     dbname='taxadb.sqlite')
     >>> query_orthomap
     """
     outhandle = None
     og_continuity_score = None
-    ncbi = NCBITaxa()
+    ncbi = qlin.load_taxadb(ncbi=ncbi,
+                            dbname=dbname)
     qname, \
         qtid, \
         qlineage, \
@@ -141,14 +152,24 @@ def get_orthomap(seqname,
         qlineagenames, \
         qlineagerev, \
         qk = qlin.get_qlin(qt=qt,
-                           quiet=True)
-    query_lineage_topo = qlin.get_lineage_topo(qt)
-    species_list = pd.read_csv(sl, sep='\t', header=None)
+                           quiet=True,
+                           ncbi=ncbi,
+                           dbname=dbname)
+    query_lineage_topo = qlin.get_lineage_topo(qt=qt,
+                                               ncbi=ncbi,
+                                               dbname=dbname)
+    species_list = pd.read_csv(sl,
+                               sep='\t',
+                               header=None)
     species_list.columns = ['species', 'taxID']
-    species_list['lineage'] = species_list.apply(lambda x: ncbi.get_lineage(x[1]),
+    #species_list['lineage'] = species_list.apply(lambda x: ncbi.get_lineage(x.iloc[1]),
+    #                                             axis=1)
+    species_list['lineage'] = species_list.apply(lambda x: qlin.ncbi_get_lineage(qt=x.iloc[1],
+                                                                                 ncbi=ncbi),
                                                  axis=1)
     species_list['youngest_common'] = [qlin.get_youngest_common(qlineage, x) for x in species_list.lineage]
-    species_list['youngest_name'] = [list(x.values())[0] for x in [ncbi.get_taxid_translator([x])
+    species_list['youngest_name'] = [list(x.values())[0] for x in [qlin.ncbi_get_taxid_translator(qt_vec=[x],
+                                                                                                  ncbi=ncbi)
                                                                    for x in list(species_list.youngest_common)]]
     if not quiet:
         print(seqname)
@@ -157,12 +178,15 @@ def get_orthomap(seqname,
         print(species_list)
     youngest_common_counts_df = get_youngest_common_counts(qlineage,
                                                            species_list)
-    for node in query_lineage_topo.traverse('postorder'):
-        nsplit = node.name.split('/')
-        if len(nsplit) == 3:
-            node.add_feature('species_count',
-                             list(youngest_common_counts_df[youngest_common_counts_df.PStaxID.isin(
-                                 [int(nsplit[1])])].counts)[0])
+    for node in qlin.traverse_postorder(query_lineage_topo.root):
+        if node.name:
+            nsplit = node.name.split('/')
+            if len(nsplit) == 3:
+                node.species_count = list(youngest_common_counts_df[youngest_common_counts_df.PStaxID.isin(
+                    [int(nsplit[1])])].counts)[0]
+            #node.add_feature('species_count',
+            #                 list(youngest_common_counts_df[youngest_common_counts_df.PStaxID.isin(
+            #                     [int(nsplit[1])])].counts)[0])
     oc_og_dict = {}
     continuity_dict = {}
     if os.path.basename(oc).split('.')[-1] == 'zip':
@@ -312,9 +336,9 @@ def get_counts_per_ps(omap_df,
     >>> query_orthomap = of2orthomap.get_orthomap(
     >>>     seqname='Danio_rerio.GRCz11.cds.longest',
     >>>     qt='7955',
-    >>>     sl='ensembl_105_orthofinder_species_list.tsv',
-    >>>     oc='ensembl_105_orthofinder_Orthogroups.GeneCount.tsv',
-    >>>     og='ensembl_105_orthofinder_Orthogroups.tsv',
+    >>>     sl='ensembl_113_orthofinder_last_species_list.tsv',
+    >>>     oc='ensembl_113_orthofinder_last_Orthogroups.GeneCount.tsv',
+    >>>     og='ensembl_113_orthofinder_last_Orthogroups.tsv',
     >>>     out=None,
     >>>     quiet=False,
     >>>     continuity=True,
@@ -365,7 +389,7 @@ def get_youngest_common_counts(qlineage,
     counts_df.set_index('lineage',
                         inplace=True)
     counts_df = pd.concat([counts_df,
-                           species_list['youngest_common'].value_counts()],
+                          species_list['youngest_common'].value_counts()],
                           join='outer',
                           axis=1)
     counts_df.columns = ['counts']
@@ -410,6 +434,9 @@ def main():
     parser = define_parser()
     args = parser.parse_args()
     print(args)
+    if not args.dbname:
+        print('\nError <-dbname> : Please specify taxadb.sqlite file')
+        sys.exit()
     if not args.seqname:
         parser.print_help()
         print('\nError <-seqname>: Please specify query species name in OrthoFinder and taxID')
@@ -438,7 +465,8 @@ def main():
                  out=args.out,
                  quiet=False,
                  continuity=True,
-                 overwrite=args.overwrite)
+                 overwrite=args.overwrite,
+                 dbname=args.dbname)
 
 
 if __name__ == '__main__':
