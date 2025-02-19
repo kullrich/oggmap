@@ -34,55 +34,66 @@ def define_parser():
     cds2aa_example = '''cds2aa example:
 
     # to get CDS from Danio rerio on Linux run:
-    $ wget https://ftp.ensembl.org/pub/release-105/fasta/danio_rerio/cds/Danio_rerio.GRCz11.cds.all.fa.gz
+    $ wget https://ftp.ensembl.org/pub/release-113/fasta/danio_rerio/cds/Danio_rerio.GRCz11.cds.all.fa.gz
     $ gunzip Danio_rerio.GRCz11.cds.all.fa.gz
 
     # on Mac:
-    $ curl https://ftp.ensembl.org/pub/release-105/fasta/danio_rerio/cds/Danio_rerio.GRCz11.cds.all.fa.gz --remote-name
+    $ curl https://ftp.ensembl.org/pub/release-113/fasta/danio_rerio/cds/Danio_rerio.GRCz11.cds.all.fa.gz --remote-name
     $ gunzip Danio_rerio.GRCz11.cds.all.fa.gz
     
     # translate and retain longest isoform from CDS fasta file:
     $ cds2aa -i Danio_rerio.GRCz11.cds.all.fa -r ENSEMBL -o Danio_rerio.GRCz11.aa.all.longest.fa
+    
+    # translate and retain longest isoform from CDS fasta file and shorten in case not multiple of three:
+    $ cds2aa -i Danio_rerio.GRCz11.cds.all.fa -r ENSEMBL -o Danio_rerio.GRCz11.aa.all.longest.fa -s
     '''
     gtf2t2g_example = '''gtf2t2g example:
 
     # to get GTF from Mus musculus on Linux run:
-    $ wget https://ftp.ensembl.org/pub/release-108/gtf/mus_musculus/Mus_musculus.GRCm39.108.chr.gtf.gz
+    $ wget https://ftp.ensembl.org/pub/release-113/gtf/mus_musculus/Mus_musculus.GRCm39.113.chr.gtf.gz
 
     # on Mac:
-    $ curl https://ftp.ensembl.org/pub/release-108/gtf/mus_musculus/Mus_musculus.GRCm39.108.chr.gtf.gz --remote-name
+    $ curl https://ftp.ensembl.org/pub/release-113/gtf/mus_musculus/Mus_musculus.GRCm39.113.chr.gtf.gz --remote-name
 
     # create t2g from GTF:
-    $ gtf2t2g -i Mus_musculus.GRCm39.108.chr.gtf.gz -o Mus_musculus.GRCm39.108.chr.gtf.t2g.tsv -g -b -p -v -s
+    $ gtf2t2g -i Mus_musculus.GRCm39.113.chr.gtf.gz -o Mus_musculus.GRCm39.113.chr.gtf.t2g.tsv -g -b -p -v -s
     '''
     ncbitax_example = '''ncbitax example:
 
     #update ncbi taxonomy database:
-    ncbitax -u
+    ncbitax -u -outdir taxadb -type taxa -dbname taxadb.sqlite
     '''
     of2orthomap_example = '''of2orthomap example:
 
     # download OrthoFinder example:
-    $ wget https://zenodo.org/record/7796253/files/ensembl_105_orthofinder_Orthogroups.GeneCount.tsv.zip
-    $ wget https://zenodo.org/record/7796253/files/ensembl_105_orthofinder_Orthogroups.tsv.zip
-    $ wget https://zenodo.org/record/7796253/files/ensembl_105_orthofinder_species_list.tsv
-
+    $ wget https://zenodo.org/records/14680521/files/ensembl_113_orthofinder_last_Orthogroups.GeneCount.tsv.zip
+    $ wget https://zenodo.org/records/14680521/files/ensembl_113_orthofinder_last_Orthogroups.tsv.zip
+    $ wget https://zenodo.org/records/14680521/files/ensembl_113_orthofinder_last_species_list.tsv
+    
     # extract orthomap:
-    $ of2orthomap -seqname Danio_rerio.GRCz11.cds.longest -qt 7955 \\
-      -sl ensembl_105_orthofinder_species_list.tsv \\
-      -oc ensembl_105_orthofinder_Orthogroups.GeneCount.tsv.zip \\
-      -og ensembl_105_orthofinder_Orthogroups.tsv.zip
+    $ of2orthomap -seqname 7955.danio_rerio.pep -qt 7955 \\
+      -sl ensembl_113_orthofinder_last_species_list.tsv \\
+      -oc ensembl_113_orthofinder_last_Orthogroups.GeneCount.tsv.zip \\
+      -og ensembl_113_orthofinder_last_Orthogroups.tsv.zip \\
+      -dbname taxadb.sqlite
     '''
     orthomcl2orthomap_example = '''orthomcl2orthomap example:
 
-    # quickly find 'Arabidopsis thaliana' short name
-    # grep 'Arabidopsis thaliana' genomeSummary_OrthoMCL-6.16.txt
+    # download OrthoMCL DB data:
+    $ wget https://beta.orthomcl.org/common/downloads/release-6.21/genomeSummary_OrthoMCL-6.21.txt.gz
+    $ gunzip genomeSummary_OrthoMCL-6.21.txt.gz
+    $ wget https://beta.orthomcl.org/common/downloads/release-6.21/groups_OrthoMCL-6.21.txt.gz
+    $ gunzip groups_OrthoMCL-6.21.txt.gz
 
+    # quickly find 'Arabidopsis thaliana' short name
+    # grep 'Arabidopsis thaliana' genomeSummary_OrthoMCL-6.21.txt
+    
     # extract orthomap:
     $ orthomcl2orthomap -tla atha \\
-      -sl genomeSummary_OrthoMCL-6.16.txt \\
-      -og groups_OrthoMCL-6.16.txt \\
-      -out atha.orthomap
+      -sl genomeSummary_OrthoMCL-6.21.txt \\
+      -og groups_OrthoMCL-6.21.txt \\
+      -out atha.orthomap \\
+      -dbname taxadb.sqlite
     '''
     plaza2orthomap_example = '''plaza2orthomap example:
     

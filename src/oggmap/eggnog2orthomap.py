@@ -61,6 +61,8 @@ def add_argparse_args(parser: argparse.ArgumentParser):
                         help='specify if existing output file should be overwritten (default: True)',
                         default=True,
                         type=bool)
+    parser.add_argument('-dbname',
+                        help='taxadb.sqlite file')
 
 
 def get_eggnog_orthomap(qt,

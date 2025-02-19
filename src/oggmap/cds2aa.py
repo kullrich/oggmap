@@ -27,11 +27,11 @@ def define_parser():
     cds2aa_example = '''cds2aa example:
 
     # to get CDS from Danio rerio on Linux run:
-    $ wget https://ftp.ensembl.org/pub/release-105/fasta/danio_rerio/cds/Danio_rerio.GRCz11.cds.all.fa.gz
+    $ wget https://ftp.ensembl.org/pub/release-113/fasta/danio_rerio/cds/Danio_rerio.GRCz11.cds.all.fa.gz
     $ gunzip Danio_rerio.GRCz11.cds.all.fa.gz
 
     # on Mac:
-    $ curl https://ftp.ensembl.org/pub/release-105/fasta/danio_rerio/cds/Danio_rerio.GRCz11.cds.all.fa.gz --remote-name
+    $ curl https://ftp.ensembl.org/pub/release-113/fasta/danio_rerio/cds/Danio_rerio.GRCz11.cds.all.fa.gz --remote-name
     $ gunzip Danio_rerio.GRCz11.cds.all.fa.gz
 
     # translate and retain longest isoform from CDS fasta file:

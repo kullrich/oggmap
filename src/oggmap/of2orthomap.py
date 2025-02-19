@@ -15,6 +15,7 @@ import sys
 import zipfile
 import argparse
 import pandas as pd
+import numpy as np
 from taxadb2.taxid import TaxID
 from taxadb2.names import SciName
 from Bio import Phylo
@@ -37,10 +38,11 @@ def define_parser():
     $ wget https://zenodo.org/records/14680521/files/ensembl_113_orthofinder_last_species_list.tsv
     
     # extract orthomap:
-    $ of2orthomap -seqname Danio_rerio.GRCz11.cds.longest -qt 7955 \\
+    $ of2orthomap -seqname 7955.danio_rerio.pep -qt 7955 \\
       -sl ensembl_113_orthofinder_last_species_list.tsv \\
       -oc ensembl_113_orthofinder_last_Orthogroups.GeneCount.tsv.zip \\
-      -og ensembl_113_orthofinder_last_Orthogroups.tsv.zip
+      -og ensembl_113_orthofinder_last_Orthogroups.tsv.zip \\
+      -dbname taxadb.sqlite
     '''
     parser = argparse.ArgumentParser(
         prog='of2orthomap',
@@ -153,11 +155,9 @@ def get_orthomap(seqname,
         qlineagerev, \
         qk = qlin.get_qlin(qt=qt,
                            quiet=True,
-                           ncbi=ncbi,
-                           dbname=dbname)
+                           ncbi=ncbi)
     query_lineage_topo = qlin.get_lineage_topo(qt=qt,
-                                               ncbi=ncbi,
-                                               dbname=dbname)
+                                               ncbi=ncbi)
     species_list = pd.read_csv(sl,
                                sep='\t',
                                header=None)

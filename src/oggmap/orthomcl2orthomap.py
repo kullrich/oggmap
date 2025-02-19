@@ -14,6 +14,9 @@ import sys
 import argparse
 import pandas as pd
 import numpy as np
+from taxadb2.taxid import TaxID
+from taxadb2.names import SciName
+from Bio import Phylo
 from oggmap import of2orthomap, qlin
 
 
@@ -27,11 +30,21 @@ def define_parser():
     """
     orthomcl2orthomap_example = '''example:
 
+    # download OrthoMCL DB data:
+    $ wget https://beta.orthomcl.org/common/downloads/release-6.21/genomeSummary_OrthoMCL-6.21.txt.gz
+    $ gunzip genomeSummary_OrthoMCL-6.21.txt.gz
+    $ wget https://beta.orthomcl.org/common/downloads/release-6.21/groups_OrthoMCL-6.21.txt.gz
+    $ gunzip groups_OrthoMCL-6.21.txt.gz
+
     # quickly find 'Arabidopsis thaliana' short name
-    # grep 'Arabidopsis thaliana' genomeSummary_OrthoMCL-6.16.txt
+    # grep 'Arabidopsis thaliana' genomeSummary_OrthoMCL-6.21.txt
     
     # extract orthomap:
-    $ orthomcl2orthomap -tla atha -sl genomeSummary_OrthoMCL-6.16.txt -og groups_OrthoMCL-6.16.txt -out atha.orthomap
+    $ orthomcl2orthomap -tla atha \\
+      -sl genomeSummary_OrthoMCL-6.21.txt \\
+      -og groups_OrthoMCL-6.21.txt \\
+      -out atha.orthomap \\
+      -dbname taxadb.sqlite
     '''
     parser = argparse.ArgumentParser(
         prog='orthomcl2orthomap',
@@ -64,6 +77,8 @@ def add_argparse_args(parser: argparse.ArgumentParser):
                         help='specify if existing output file should be overwritten (default: True)',
                         default=True,
                         type=bool)
+    parser.add_argument('-dbname',
+                        help='taxadb.sqlite file')
 
 
 def _get_species_tax_id(species_name_list, species_list):
@@ -122,7 +137,9 @@ def get_orthomcl_orthomap(tla,
                           out=None,
                           quiet=False,
                           continuity=True,
-                          overwrite=True):
+                          overwrite=True,
+                          ncbi=None,
+                          dbname=None):
     """
     This function return an orthomap for a given query species and orthomcl groups data.
 
@@ -133,6 +150,8 @@ def get_orthomcl_orthomap(tla,
     :param quiet: Specify if output should be quiet.
     :param continuity: Specify if continuity score should be calculated.
     :param overwrite: Specify if output should be overwritten.
+    :param ncbi: The NCBI taxonomic database.
+    :param dbname: Specify taxadb.sqlite file.
     :return: A list of results such as:
              orthomap, species_list, youngest_common_counts
 
@@ -143,6 +162,8 @@ def get_orthomcl_orthomap(tla,
     :type quiet: bool
     :type continuity: bool
     :type overwrite: bool
+    :type ncbi: dict
+    :type dbname: str
     :rtype: list
 
     Example
@@ -151,8 +172,12 @@ def get_orthomcl_orthomap(tla,
     """
     outhandle = None
     og_continuity_score = None
-    ncbi = NCBITaxa()
-    species_list = pd.read_csv(sl, sep='\t', header=0, comment='#')
+    ncbi = qlin.load_taxadb(ncbi=ncbi,
+                            dbname=dbname)
+    species_list = pd.read_csv(sl,
+                               sep='\t',
+                               header=0,
+                               comment='#')
     if tla not in list(species_list['THREE_LETTER_ABBREV']):
         print('\nError <-qt>: query species orthomcl short name not in orthomcl results,'
               'please check THREE_LETTER_ABBREV.')
@@ -160,19 +185,38 @@ def get_orthomcl_orthomap(tla,
     species_list['species'] = [' '.join(x.split(' ')[:2])
                                .replace('Ashbya gossypii', 'Eremothecium gossypii')
                                .replace('Amphiamblys sp.', 'Amphiamblys')
+                               .replace('Candida auris', 'Candidozyma auris')
+                               .replace('Candida duobushaemulonis', 'Candidozyma duobushaemuli')
                                .replace('Candida haemulonis', '[Candida] cf. haemuloni HMD-2015')
-                               .replace('Candida pseudohaemulonii', '[Candida] pseudohaemulonii')
+                               .replace('[Candida] cf. haemuloni HMD-2015', 'Candidozyma cf. haemuli HMD-2015')
+                               .replace('Candida pseudohaemulonii', 'Candidozyma pseudohaemuli')
                                .replace('Cryptococcus cf.', 'Cryptococcus cf. gattii')
                                .replace('Giardia Assemblage', 'Giardia intestinalis')
+                               .replace('Korarchaeum cryptofilum', 'Candidatus Korarchaeum cryptofilum')
+                               .replace('Kwoniella mangroviensis', 'Kwoniella mangrovensis')
+                               .replace('Lingula unguis', 'Lingula anatina')
                                .replace('Melampsora larici-populina', 'Melampsora laricis-populina')
+                               .replace('Mycoplasma genitalium', 'Mycoplasmoides genitalium')
                                .replace('Nematocida ironsii', 'Nematocida')
+                               .replace('Nosema apis', 'Vairimorpha apis')
+                               .replace('Nosema ceranae', 'Vairimorpha ceranae')
+                               .replace('Phanerochaete chrysosporium', 'Phanerodontia chrysosporium')
+                               .replace('Phialophora attinorum', 'Cyphellophora attinorum')
+                               .replace('Phytophthora parasitica', 'Phytophthora nicotianae')
+                               .replace('Picrophilus torridus', 'Picrophilus oshimae')
                                .replace('Plasmodium adleri', 'Plasmodium (Laverania)')
+                               .replace('Plasmodium billcollinsi', 'Plasmodium sp. DRC-Itaito')
                                .replace('Plasmodium blacklocki', 'Plasmodium (Laverania)')
                                .replace('Plasmodium praefalciparum', 'Plasmodium (Laverania)')
                                .replace('Plasmodium vivax-like', 'Plasmodium (Laverania)')
                                .replace('Porospora cf.', 'Porospora')
+                               .replace('Raffaelea lauricola', 'Harringtonia lauricola')
+                               .replace('Thelohania contejeani', 'Astathelohania contejeani')
+                               .replace('Ustilago maydis', 'Mycosarcoma maydis')
                                for x in species_list['NAME']]
-    species_list['tax_id'] = [qlin.get_qlin(q=x, quiet=True)[1] for x in species_list['species']]
+    species_list['tax_id'] = [qlin.get_qlin(q=x,
+                                            quiet=True,
+                                            ncbi=ncbi)[1] for x in species_list['species']]
     qt_species = list(species_list[species_list['THREE_LETTER_ABBREV'] == tla]['tax_id'])[0]
     qname,\
         qtid,\
@@ -182,8 +226,10 @@ def get_orthomcl_orthomap(tla,
         qlineagenames,\
         qlineagerev,\
         qk = qlin.get_qlin(qt=qt_species,
-                           quiet=True)
-    query_lineage_topo = qlin.get_lineage_topo(qt_species)
+                           quiet=True,
+                           ncbi=ncbi)
+    query_lineage_topo = qlin.get_lineage_topo(qt=qt_species,
+                                               ncbi=ncbi)
     ogs = _parse_orthomcl_groups(og, tla)
     ogs_grouped = ogs.groupby('gf_id')['species'].apply(set).apply(list).apply(_get_species_tax_id,
                                                                                species_list=species_list)
@@ -194,15 +240,18 @@ def get_orthomcl_orthomap(tla,
     ogs_grouped_qt['gene_id'] = ogs_qt_red_grouped
     ogs_grouped_qt_species = np.sort(list(set([x[0] for x in ogs_grouped_qt['species'].to_dict().values()])))
     ogs_grouped_qt_species_names = [qlin.get_qlin(qt=x,
-                                                  quiet=True)[0] for x in ogs_grouped_qt_species]
+                                                  quiet=True,
+                                                  ncbi=ncbi)[0] for x in ogs_grouped_qt_species]
     species_list_df = pd.DataFrame(ogs_grouped_qt_species_names,
                                    columns=['species'])
     species_list_df['taxID'] = ogs_grouped_qt_species
-    species_list_df['lineage'] = species_list_df.apply(lambda x: ncbi.get_lineage(x[1]),
+    species_list_df['lineage'] = species_list_df.apply(lambda x: qlin.ncbi_get_lineage(qt=x.iloc[1],
+                                                                                       ncbi=ncbi),
                                                        axis=1)
     species_list_df['youngest_common'] = [qlin.get_youngest_common(qlineage,
                                                                    x) for x in species_list_df.lineage]
-    species_list_df['youngest_name'] = [list(x.values())[0] for x in [ncbi.get_taxid_translator([x])
+    species_list_df['youngest_name'] = [list(x.values())[0] for x in [qlin.ncbi_get_taxid_translator(qt_vec=[x],
+                                                                                                     ncbi=ncbi)
                                                                       for x in list(species_list_df.youngest_common)]]
     if not quiet:
         print(qname)
@@ -210,12 +259,18 @@ def get_orthomcl_orthomap(tla,
         print(species_list_df)
     youngest_common_counts_df = of2orthomap.get_youngest_common_counts(qlineage,
                                                                        species_list_df)
-    for node in query_lineage_topo.traverse('postorder'):
-        nsplit = node.name.split('/')
-        if len(nsplit) == 3:
-            node.add_feature('species_count',
-                             list(youngest_common_counts_df[youngest_common_counts_df.PStaxID.isin(
-                                 [int(nsplit[1])])].counts)[0])
+    for node in qlin.traverse_postorder(query_lineage_topo.root):
+        if node.name:
+            nsplit = node.name.split('/')
+            if len(nsplit) == 3:
+                node.species_count = list(youngest_common_counts_df[youngest_common_counts_df.PStaxID.isin(
+                    [int(nsplit[1])])].counts)[0]
+    #for node in query_lineage_topo.traverse('postorder'):
+    #    nsplit = node.name.split('/')
+    #    if len(nsplit) == 3:
+    #        node.add_feature('species_count',
+    #                         list(youngest_common_counts_df[youngest_common_counts_df.PStaxID.isin(
+    #                             [int(nsplit[1])])].counts)[0])
     og_dict = {}
     continuity_dict = {}
     for og in ogs_grouped_qt.index:
@@ -314,7 +369,8 @@ def main():
                           sl=args.sl,
                           og=args.og,
                           out=args.out,
-                          overwrite=args.overwrite)
+                          overwrite=args.overwrite,
+                          dbname=args.dbname)
 
 
 if __name__ == '__main__':

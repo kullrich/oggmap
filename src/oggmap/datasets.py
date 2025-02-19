@@ -245,6 +245,33 @@ def zebrafish_ensembl110_gtf(datapath='.'):
     return zebrafish_gtf_filename
 
 
+def zebrafish_ensembl113_gtf(datapath='.'):
+    """
+    Download GTF for species Danio rerio from ensembl release-113
+    https://ftp.ensembl.org/pub/release-113/gtf/danio_rerio/
+
+    :param datapath: Path to safe dataset.
+    :return: Path to GTF file.
+
+    :type datapath: str
+    :rtype: str
+
+    Example
+    -------
+    >>> from oggmap import datasets
+    >>> datasets.zebrafish_ensembl113_gtf(datapath='.')
+    """
+    if not os.path.exists(datapath):
+        print('datapath does not exist, is created now')
+        os.makedirs(name=datapath)
+    zebrafish_gtf_filename = os.path.join(datapath,
+                                          'Danio_rerio.GRCz11.113.gtf.gz')
+    zebrafish_gtf_url = 'https://ftp.ensembl.org/pub/release-113/gtf/danio_rerio/Danio_rerio.GRCz11.113.gtf.gz'
+    wget.download(url=zebrafish_gtf_url,
+                  out=datapath)
+    return zebrafish_gtf_filename
+
+
 def mouse_ensembl105_gtf(datapath='.'):
     """
     Download GTF for species Mus musculus from ensembl release-105
@@ -294,6 +321,33 @@ def mouse_ensembl110_gtf(datapath='.'):
     mouse_gtf_filename = os.path.join(datapath,
                                       'Mus_musculus.GRCm39.110.gtf.gz')
     mouse_gtf_url = 'https://ftp.ensembl.org/pub/release-110/gtf/mus_musculus/Mus_musculus.GRCm39.110.gtf.gz'
+    wget.download(url=mouse_gtf_url,
+                  out=datapath)
+    return mouse_gtf_filename
+
+
+def mouse_ensembl113_gtf(datapath='.'):
+    """
+    Download GTF for species Mus musculus from ensembl release-113
+    https://ftp.ensembl.org/pub/release-113/gtf/mus_musculus/
+
+    :param datapath: Path to safe dataset.
+    :return: Path to GTF file.
+
+    :type datapath: str
+    :rtype: str
+
+    Example
+    -------
+    >>> from oggmap import datasets
+    >>> datasets.mouse_ensembl113_gtf(datapath='.')
+    """
+    if not os.path.exists(datapath):
+        print('datapath does not exist, is created now')
+        os.makedirs(name=datapath)
+    mouse_gtf_filename = os.path.join(datapath,
+                                      'Mus_musculus.GRCm39.113.gtf.gz')
+    mouse_gtf_url = 'https://ftp.ensembl.org/pub/release-113/gtf/mus_musculus/Mus_musculus.GRCm39.113.gtf.gz'
     wget.download(url=mouse_gtf_url,
                   out=datapath)
     return mouse_gtf_filename

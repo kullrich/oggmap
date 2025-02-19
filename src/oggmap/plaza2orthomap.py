@@ -65,6 +65,8 @@ def add_argparse_args(parser: argparse.ArgumentParser):
                         help='specify if existing output file should be overwritten (default: True)',
                         default=True,
                         type=bool)
+    parser.add_argument('-dbname',
+                        help='taxadb.sqlite file')
 
 
 def _get_species_tax_id(species_name_list, species_list):

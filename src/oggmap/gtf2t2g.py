@@ -28,13 +28,13 @@ def define_parser():
     gtf2t2g_example = '''gtf2t2g example:
     
     # to get GTF from Mus musculus on Linux run:
-    $ wget https://ftp.ensembl.org/pub/release-108/gtf/mus_musculus/Mus_musculus.GRCm39.108.chr.gtf.gz
+    $ wget https://ftp.ensembl.org/pub/release-113/gtf/mus_musculus/Mus_musculus.GRCm39.113.chr.gtf.gz
 
     # on Mac:
-    $ curl https://ftp.ensembl.org/pub/release-108/gtf/mus_musculus/Mus_musculus.GRCm39.108.chr.gtf.gz --remote-name
+    $ curl https://ftp.ensembl.org/pub/release-113/gtf/mus_musculus/Mus_musculus.GRCm39.113.chr.gtf.gz --remote-name
 
     # create t2g from GTF:
-    $ gtf2t2g -i Mus_musculus.GRCm39.108.chr.gtf.gz -o Mus_musculus.GRCm39.108.chr.gtf.t2g.tsv -g -b -p -v -s
+    $ gtf2t2g -i Mus_musculus.GRCm39.113.chr.gtf.gz -o Mus_musculus.GRCm39.113.chr.gtf.t2g.tsv -g -b -p -v -s
     '''
     parser = argparse.ArgumentParser(
         prog='gtf2t2g',
@@ -162,8 +162,8 @@ def parse_gtf(gtf,
     -------
     >>> from oggmap import datasets, gtf2t2g
     >>> # get gene to transcript table for Danio rerio
-    >>> # https://ftp.ensembl.org/pub/release-105/gtf/danio_rerio/Danio_rerio.GRCz11.105.gtf.gz
-    >>> gtf_file = datasets.zebrafish_ensembl105_gtf(datapath='.')
+    >>> # https://ftp.ensembl.org/pub/release-113/gtf/danio_rerio/Danio_rerio.GRCz11.113.gtf.gz
+    >>> gtf_file = datasets.zebrafish_ensembl113_gtf(datapath='.')
     >>> query_species_t2g = gtf2t2g.parse_gtf(gtf=gtf_file,\
     >>>     g=True, b=True, p=True, v=True, s=True, q=True)
     >>> query_species_t2g

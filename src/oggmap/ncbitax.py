@@ -27,7 +27,7 @@ def define_parser():
     ncbitax_example = '''ncbitax example:
 
     #update ncbi taxonomy database:
-    ncbitax -u -outdir taxadb -type taxa -dbname taxadb
+    ncbitax -u -outdir taxadb -type taxa -dbname taxadb.sqlite
     '''
     parser = argparse.ArgumentParser(
         prog='ncbitax',

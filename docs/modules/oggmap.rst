@@ -1,4 +1,4 @@
-.. _modules:
+.. _module_oggmap:
 
 oggmap - Command line functions
 =================================
@@ -14,11 +14,14 @@ Command line function - oggmap
       -h, --help            show this help message and exit
 
     sub-commands:
-      {gtf2t2g,ncbitax,of2orthomap,qlin}
+      {cds2aa,gtf2t2g,ncbitax,of2orthomap,orthomcl2orthomap,plaza2orthomap,qlin}
                             sub-commands help
-        gtf2t2g             extracts transcript to gene table from GTF <gtf2t2g -h>
+        cds2aa              translate CDS to AA and optional retain longest isoform <cds2aa -h>
+        gtf2t2g             extract transcript to gene table from GTF <gtf2t2g -h>
         ncbitax             update local ncbi taxonomy database <ncbitax -h>
-        of2orthomap         extract orthomap from OrthoFinder output for query species <oggmap -h>
+        of2orthomap         extract orthomap from OrthoFinder output for query species <of2orthomap -h>
+        orthomcl2orthomap   extract orthomap from orthomcl output for query species <orthomcl2orthomap -h>
+        plaza2orthomap      extract orthomap from PLAZA gene family data for query species <of2orthomap -h>
         qlin                get query lineage based on ncbi taxonomy <qlin -h>
 
 Command line function - cds2aa
