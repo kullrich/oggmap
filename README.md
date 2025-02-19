@@ -15,6 +15,10 @@
 Oggmap results (gene ages per orthologous group) can be further used to calculate and visualize weighted expression data
 (transcriptome evolutionary index) from scRNA sequencing objects.
 
+![oggmap steps](docs/tutorials/img/oggmap_steps.png)
+![zebrafish example](docs/tutorials/img/zebrafish_tei.png)
+![nematode example](docs/tutorials/img/nematode_pi.png)
+
 ## Documentation
 
 Online documentation can be found [here](https://oggmap.readthedocs.io/en/latest/).
