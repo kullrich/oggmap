@@ -32,7 +32,7 @@ More installation options can be found [here](https://oggmap.readthedocs.io/en/l
 We recommend installing `oggmap` in an independent conda environment to avoid dependent software conflicts.
 Please make a new python environment for `oggmap` and install dependent libraries in it.
 
-If you do not have a working installation of Python 3.8 (or later),
+If you do not have a working installation of Python 3.10 (or later),
 consider installing [Anaconda](https://docs.anaconda.com/anaconda/install/) or
 [Miniconda](https://docs.conda.io/en/latest/miniconda.html).
 
@@ -58,12 +58,21 @@ Detailed tutorials how to use `oggmap` can be found [here](https://oggmap.readth
 ### Update/download local ncbi taxonomic database:
 
 The following command downloads or updates your local copy of the
-NCBI's taxonomy database (~300MB). The database is saved at
-`~/.etetoolkit/taxa.sqlite`.
+NCBI's taxonomy database (~150MB). The database is saved at `-dbname`
+set to default `taxadb.sqlite`.
+
+```shell
+$ oggmap ncbitax -u -outdir taxadb -type taxa -dbname taxadb.sqlite
+$ rm -rf taxadb
+```
 
 ```python
 >>> from oggmap import ncbitax
->>> ncbitax.update_ncbi()
+>>> update_parser = ncbitax.define_parser()
+>>> update_args = update_parser.parse_args()
+>>> update_args.outdir = 'taxadb'
+>>> update_args.dbname = 'taxadb.sqlite'
+>>> ncbitax.update_ncbi(update_args)
 ```
 
 ### Step 1 - Get query species taxonomic lineage information:
@@ -71,40 +80,70 @@ NCBI's taxonomy database (~300MB). The database is saved at
 You can query a species lineage information based on its name or its
 taxID. For example `Danio rerio` with taxID `7955`:
 
+```shell
+$ oggmap qlin -q "Danio rerio" -dbname taxadb.sqlite
+$ oggmap qlin -qt 7955 -dbname taxadb.sqlite
+```
+
 ```python
 >>> from oggmap import qlin
->>> qlin.get_qlin(q = 'Danio rerio')
->>> qlin.get_qlin(qt = '7955')
+>>> qlin.get_qlin(q='Danio rerio',
+...     dbname = 'taxadb.sqlite')
+>>> qlin.get_qlin(qt='7955',
+...     dbname = 'taxadb.sqlite')
 ```
 
 You can get the query species topology as a tree.
 For example for `Danio rerio` with taxID `7955`:
 
 ```python
+>>> from io import StringIO
+>>> from Bio import Phylo
 >>> from oggmap import qlin
->>> query_topology = qlin.get_lineage_topo(qt = '7955')
->>> query_topology.write()
+>>> query_topology = qlin.get_lineage_topo(qt='7955',
+...     dbname='taxadb.sqlite')
+>>> output = StringIO()
+>>> Phylo.write(query_topology, output, "newick")
+>>> output.getvalue().strip()
 ```
 
 ### Step 2 - Get query species orthomap from OrthoFinder results:
 
 The following code extracts the `orthomap` for `Danio rerio` based on pre-calculated 
-OrthoFinder results and ensembl release-105:
+OrthoFinder results and ensembl release-113:
 
 OrthoFinder results (-S diamond_ultra_sens) using translated, longest-isoform coding sequences
-from ensembl release-105 have been archived and can be found
+from ensembl release-113 have been archived and can be found
 [here](https://zenodo.org/record/7242264#.Y1p19i0Rowc).
 
+```shell
+# download OrthoFinder example:
+$ wget https://zenodo.org/records/14680521/files/ensembl_113_orthofinder_last_Orthogroups.GeneCount.tsv.zip
+$ wget https://zenodo.org/records/14680521/files/ensembl_113_orthofinder_last_Orthogroups.tsv.zip
+$ wget https://zenodo.org/records/14680521/files/ensembl_113_orthofinder_last_species_list.tsv    
+
+# extract orthomap:
+$ oggmap of2orthomap -seqname 7955.danio_rerio.pep -qt 7955 \\
+  -sl ensembl_113_orthofinder_last_species_list.tsv \\
+  -oc ensembl_113_orthofinder_last_Orthogroups.GeneCount.tsv.zip \\
+  -og ensembl_113_orthofinder_last_Orthogroups.tsv.zip \\
+  -dbname taxadb.sqlite
+```
+
 ```python
->>> from oggmap import datasets, of2orthomap
->>> datasets.ensembl105(datapath='.')
->>> query_orthomap = of2orthomap.get_orthomap(
-...     seqname='Danio_rerio.GRCz11.cds.longest',
+>>> from oggmap import datasets, of2orthomap, qlin
+>>> datasets.ensembl113_last(datapath='.')
+>>> query_orthomap, orthofinder_species_list, of_species_abundance = of2orthomap.get_orthomap(
+...     seqname='7955.danio_rerio.pep',
 ...     qt='7955',
-...     sl='ensembl_105_orthofinder_species_list.tsv',
-...     oc='ensembl_105_orthofinder_Orthogroups.GeneCount.tsv',
-...     og='ensembl_105_orthofinder_Orthogroups.tsv',
-...     out=None, quiet=False, continuity=True, overwrite=True)
+...     sl='ensembl_113_orthofinder_last_species_list.tsv',
+...     oc='ensembl_113_orthofinder_last_Orthogroups.GeneCount.tsv.zip',
+...     og='ensembl_113_orthofinder_last_Orthogroups.tsv.zip',
+...     out=None,
+...     quiet=False,
+...     continuity=True,
+...     overwrite=True,
+...     dbname='taxadb.sqlite')
 >>> query_orthomap
 ```
 
@@ -114,9 +153,21 @@ The following code extracts the gene to transcript table for `Danio rerio`:
 
 GTF file obtained from [here](https://ftp.ensembl.org/pub/release-105/gtf/danio_rerio/Danio_rerio.GRCz11.105.gtf.gz).
 
+```shell
+# to get GTF from Mus musculus on Linux run:
+$ wget https://ftp.ensembl.org/pub/release-113/gtf/mus_musculus/Mus_musculus.GRCm39.113.chr.gtf.gz
+# on Mac:
+$ curl https://ftp.ensembl.org/pub/release-113/gtf/mus_musculus/Mus_musculus.GRCm39.113.chr.gtf.gz --remote-name
+
+# create t2g from GTF:
+$ oggmap gtf2t2g -i Mus_musculus.GRCm39.113.chr.gtf.gz \\
+  -o Mus_musculus.GRCm39.113.chr.gtf.t2g.tsv \\
+  -g -b -p -v -s
+```
+
 ```python
 >>> from oggmap import datasets, gtf2t2g
->>> gtf_file = datasets.zebrafish_gtf(datapath='.')
+>>> gtf_file = datasets.zebrafish_ensembl113_gtf(datapath='.')
 >>> query_species_t2g = gtf2t2g.parse_gtf(
 ...     gtf=gtf_file,
 ...     g=True, b=True, p=True, v=True, s=True, q=True)
@@ -161,18 +212,18 @@ one can calculate the transcriptome evolutionary index (TEI) and add them to the
 
 ```python
 >>> # add TEI values to existing adata object
->>> orthomap2tei.get_tei(adata=zebrafish_data,
-...    gene_id=query_orthomap['geneID'],
-...    gene_age=query_orthomap['PSnum'],
-...    keep='min',
-...    layer=None,
-...    add=True,
-...    obs_name='tei',
-...    boot=False,
-...    bt=10,
-...    normalize_total=False,
-...    log1p=False,
-...    target_sum=1e6)
+>>> orthomap2tei.get_tei(adata = zebrafish_data,
+...    gene_id = query_orthomap['geneID'],
+...    gene_age = query_orthomap['PSnum'],
+...    keep = 'min',
+...    layer = None,
+...    add = True,
+...    obs_name = 'tei',
+...    boot = False,
+...    bt = 10,
+...    normalize_total = False,
+...    log1p = False,
+...    target_sum = 1e6)
 ```
 
 ### Step 5 - Downstream analysis
@@ -184,13 +235,13 @@ by any given observation pre-defined in the scRNA dataset.
 #### Boxplot TEI per stage:
 
 ```python
->>>sc.pl.violin(adata=zebrafish_data,
-...             keys=['tei'],
-...             groupby='stage',
-...             rotation=90,
-...             palette='Paired',
-...             stripplot=False,
-...             inner='box')
+>>>sc.pl.violin(adata = zebrafish_data,
+...     keys = ['tei'],
+...     groupby = 'stage',
+...     rotation = 90,
+...     palette = 'Paired',
+...     stripplot = False,
+...     inner = 'box')
 ```
 
 ## oggmap via Command Line
@@ -200,7 +251,7 @@ by any given observation pre-defined in the scRNA dataset.
 Command line documentation can be found [here](https://oggmap.readthedocs.io/en/latest/modules/oggmap.html).
 
 ```shell
-$ oggmap
+$ oggmap -h
 ```
 
 ```
@@ -208,28 +259,30 @@ usage: oggmap <sub-command>
 
 oggmap
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
 
 sub-commands:
-  {cds2aa,gtf2t2g,ncbitax,of2orthomap,plaza2orthomap,qlin}
+  {cds2aa,gtf2t2g,ncbitax,of2orthomap,orthomcl2orthomap,plaza2orthomap,qlin}
                         sub-commands help
     cds2aa              translate CDS to AA and optional retain longest
                         isoform <cds2aa -h>
-    gtf2t2g             extracts transcript to gene table from GTF <gtf2t2g
-                        -h>
+    gtf2t2g             extract transcript to gene table from GTF
+                        <gtf2t2g -h>
     ncbitax             update local ncbi taxonomy database <ncbitax -h>
-    of2orthomap         extract orthomap from OrthoFinder output for query
-                        species <orthomap -h>
-    plaza2orthomap      extract orthomap from PLAZA gene family data for query
-                        species <of2orthomap -h>
+    of2orthomap         extract orthomap from OrthoFinder output for
+                        query species <of2orthomap -h>
+    orthomcl2orthomap   extract orthomap from orthomcl output for
+                        query species <orthomcl2orthomap -h>
+    plaza2orthomap      extract orthomap from PLAZA gene family data
+                        for query species <of2orthomap -h>
     qlin                get query lineage based on ncbi taxonomy <qlin -h>
 ```
 
 To retrieve e.g. the lineage information for `Danio rerio` run the following command:
 
 ```shell
-$ oggmap qlin -q "Danio rerio"
+$ oggmap qlin -q "Danio rerio" -dbname taxadb.sqlite
 ```
 
 ## Development Version

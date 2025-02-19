@@ -27,11 +27,27 @@ def define_parser():
     """
     plaza2orthomap_example = '''example:
 
+    # download Species information and Gene Family Clusters from Dicots PLAZA 5.0 data:
+    $ wget https://ftp.psb.ugent.be/pub/plaza/plaza_public_dicots_05/SpeciesInformation/species_information.csv.gz
+    $ gunzip species_information.csv.gz
+    $ wget https://ftp.psb.ugent.be/pub/plaza/plaza_public_dicots_05/GeneFamilies/genefamily_data.ORTHOFAM.csv.gz
+    $ gunzip genefamily_data.ORTHOFAM.csv.gz
+    $ wget https://ftp.psb.ugent.be/pub/plaza/plaza_public_dicots_05/GeneFamilies/genefamily_data.HOMFAM.csv.gz
+    $ gunzip  genefamily_data.HOMFAM.csv.gz
+    
     # using Orthologous gene family 
-    $ plaza2orthomap -qt 3702 -sl species_information.csv -og genefamily_data.ORTHOFAM.csv -out 3702.orthofam.orthomap
+    $ plaza2orthomap -qt 3702 \\
+      -sl species_information.csv \\
+      -og genefamily_data.ORTHOFAM.csv \\
+      -out 3702.orthofam.orthomap \\
+      -dbname taxadb.sqlite
     
     # using Homologous gene family 
-    $ plaza2orthomap -qt 3702 -sl species_information.csv -og genefamily_data.HOMFAM.csv -out 3702.homfam.orthomap
+    $ plaza2orthomap -qt 3702 \\
+      -sl species_information.csv \\
+      -og genefamily_data.HOMFAM.csv \\
+      -out 3702.homfam.orthomap \\
+      -dbname taxadb.sqlite
     '''
     parser = argparse.ArgumentParser(
         prog='plaza2orthomap',
@@ -95,7 +111,9 @@ def get_plaza_orthomap(qt,
                        out=None,
                        quiet=False,
                        continuity=True,
-                       overwrite=True):
+                       overwrite=True,
+                       ncbi=None,
+                       dbname=None):
     """
     This function return an orthomap for a given query species and PLAZA gene family data.
 
@@ -106,6 +124,8 @@ def get_plaza_orthomap(qt,
     :param quiet: Specify if output should be quiet.
     :param continuity: Specify if continuity score should be calculated.
     :param overwrite: Specify if output should be overwritten.
+    :param ncbi: The NCBI taxonomic database.
+    :param dbname: Specify taxadb.sqlite file.
     :return: A list of results such as:
              orthomap, species_list, youngest_common_counts
 
@@ -116,6 +136,8 @@ def get_plaza_orthomap(qt,
     :type quiet: bool
     :type continuity: bool
     :type overwrite: bool
+    :type ncbi: dict
+    :type dbname: str
     :rtype: list
 
     Example
@@ -124,7 +146,8 @@ def get_plaza_orthomap(qt,
     """
     outhandle = None
     og_continuity_score = None
-    ncbi = NCBITaxa()
+    ncbi = qlin.load_taxadb(ncbi=ncbi,
+                            dbname=dbname)
     qname,\
         qtid,\
         qlineage,\
@@ -133,15 +156,23 @@ def get_plaza_orthomap(qt,
         qlineagenames,\
         qlineagerev,\
         qk = qlin.get_qlin(qt=qt,
-                           quiet=True)
-    query_lineage_topo = qlin.get_lineage_topo(qt)
-    species_list = pd.read_csv(sl, sep='\t', header=None, comment='#')
+                           quiet=True,
+                           ncbi=ncbi)
+    query_lineage_topo = qlin.get_lineage_topo(qt=qt,
+                                               ncbi=ncbi)
+    species_list = pd.read_csv(sl,
+                               sep='\t',
+                               header=None,
+                               comment='#')
     species_list.columns = ['species', 'common_name', 'tax_id', 'source', 'data_provider', 'pubmed_id']
     qt_species = list(species_list['species'][species_list['tax_id'] == int(qt)])
     if len(qt_species) == 0:
         print('\nError <-qt>: query species taxID not in PLAZA results, please check taxID.')
         sys.exit()
-    ogs = pd.DataFrame(pd.read_csv(og, sep='\t', header=None, comment='#'))
+    ogs = pd.DataFrame(pd.read_csv(og,
+                                   sep='\t',
+                                   header=None,
+                                   comment='#'))
     ogs.columns = ['gf_id', 'species', 'gene_id']
     ogs_grouped = ogs.groupby('gf_id')['species'].apply(set).apply(list).apply(_get_species_tax_id,
                                                                                species_list=species_list)
@@ -152,15 +183,18 @@ def get_plaza_orthomap(qt,
     ogs_grouped_qt['gene_id'] = ogs_qt_red_grouped
     ogs_grouped_qt_species = np.sort(list(set([x[0] for x in ogs_grouped_qt['species'].to_dict().values()])))
     ogs_grouped_qt_species_names = [qlin.get_qlin(qt=x,
-                                                  quiet=True)[0] for x in ogs_grouped_qt_species]
+                                                  quiet=True,
+                                                  ncbi=ncbi)[0] for x in ogs_grouped_qt_species]
     species_list_df = pd.DataFrame(ogs_grouped_qt_species_names,
                                    columns=['species'])
     species_list_df['taxID'] = ogs_grouped_qt_species
-    species_list_df['lineage'] = species_list_df.apply(lambda x: ncbi.get_lineage(x[1]),
+    species_list_df['lineage'] = species_list_df.apply(lambda x: qlin.ncbi_get_lineage(qt=x.iloc[1],
+                                                                                       ncbi=ncbi),
                                                        axis=1)
     species_list_df['youngest_common'] = [qlin.get_youngest_common(qlineage,
                                                                    x) for x in species_list_df.lineage]
-    species_list_df['youngest_name'] = [list(x.values())[0] for x in [ncbi.get_taxid_translator([x])
+    species_list_df['youngest_name'] = [list(x.values())[0] for x in [qlin.ncbi_get_taxid_translator(qt_vec=[x],
+                                                                                                     ncbi=ncbi)
                                                                       for x in list(species_list_df.youngest_common)]]
     if not quiet:
         print(qname)
@@ -168,12 +202,18 @@ def get_plaza_orthomap(qt,
         print(species_list_df)
     youngest_common_counts_df = of2orthomap.get_youngest_common_counts(qlineage,
                                                                        species_list_df)
-    for node in query_lineage_topo.traverse('postorder'):
-        nsplit = node.name.split('/')
-        if len(nsplit) == 3:
-            node.add_feature('species_count',
-                             list(youngest_common_counts_df[youngest_common_counts_df.PStaxID.isin(
-                                 [int(nsplit[1])])].counts)[0])
+    for node in qlin.traverse_postorder(query_lineage_topo.root):
+        if node.name:
+            nsplit = node.name.split('/')
+            if len(nsplit) == 3:
+                node.species_count = list(youngest_common_counts_df[youngest_common_counts_df.PStaxID.isin(
+                    [int(nsplit[1])])].counts)[0]
+    #for node in query_lineage_topo.traverse('postorder'):
+    #    nsplit = node.name.split('/')
+    #    if len(nsplit) == 3:
+    #        node.add_feature('species_count',
+    #                         list(youngest_common_counts_df[youngest_common_counts_df.PStaxID.isin(
+    #                             [int(nsplit[1])])].counts)[0])
     og_dict = {}
     continuity_dict = {}
     for og in ogs_grouped_qt.index:
@@ -256,6 +296,9 @@ def main():
     parser = define_parser()
     args = parser.parse_args()
     print(args)
+    if not args.dbname:
+        print('\nError <-dbname> : Please specify taxadb.sqlite file')
+        sys.exit()
     if not args.qt:
         parser.print_help()
         print('\nError <-qt>: Please specify query species taxID')
@@ -273,7 +316,8 @@ def main():
                        sl=args.sl,
                        og=args.og,
                        out=args.out,
-                       overwrite=args.overwrite)
+                       overwrite=args.overwrite,
+                       dbname=args.dbname)
 
 
 if __name__ == '__main__':

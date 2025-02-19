@@ -74,8 +74,8 @@ def add_argparse_args(parser: argparse.ArgumentParser):
 def update_ncbi(args):
     """
     This function updates or downloads the NCBI taxonomy database using
-    the package `ete3`. A parsed version of it will be stored at the home
-    directory: `~/.etetoolkit/taxa.sqlite`.
+    the package `taxadb2`. A parsed version of it will be stored at a given
+    directory: `taxadb.sqlite`.
 
     :param args: Command-line arguments.
 

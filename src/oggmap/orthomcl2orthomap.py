@@ -14,9 +14,6 @@ import sys
 import argparse
 import pandas as pd
 import numpy as np
-from taxadb2.taxid import TaxID
-from taxadb2.names import SciName
-from Bio import Phylo
 from oggmap import of2orthomap, qlin
 
 
@@ -353,6 +350,9 @@ def main():
     parser = define_parser()
     args = parser.parse_args()
     print(args)
+    if not args.dbname:
+        print('\nError <-dbname> : Please specify taxadb.sqlite file')
+        sys.exit()
     if not args.tla:
         parser.print_help()
         print('\nError <-tla>: Please specify query species orthomcl short name (THREE_LETTER_ABBREV)')

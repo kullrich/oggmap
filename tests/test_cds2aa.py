@@ -2,7 +2,6 @@
 # -*- coding: UTF-8 -*-
 
 import argparse
-import pandas as pd
 from oggmap import cds2aa
 
 

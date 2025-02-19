@@ -97,26 +97,38 @@ def define_parser():
     '''
     plaza2orthomap_example = '''plaza2orthomap example:
     
+    # download Species information and Gene Family Clusters from Dicots PLAZA 5.0 data:
+    $ wget https://ftp.psb.ugent.be/pub/plaza/plaza_public_dicots_05/SpeciesInformation/species_information.csv.gz
+    $ gunzip species_information.csv.gz
+    $ wget https://ftp.psb.ugent.be/pub/plaza/plaza_public_dicots_05/GeneFamilies/genefamily_data.ORTHOFAM.csv.gz
+    $ gunzip genefamily_data.ORTHOFAM.csv.gz
+    $ wget https://ftp.psb.ugent.be/pub/plaza/plaza_public_dicots_05/GeneFamilies/genefamily_data.HOMFAM.csv.gz
+    $ gunzip  genefamily_data.HOMFAM.csv.gz
+    
     # using Orthologous gene family 
     $ plaza2orthomap -qt 3702 \\
       -sl species_information.csv \\
       -og genefamily_data.ORTHOFAM.csv \\
-      -out 3702.orthofam.orthomap
+      -out 3702.orthofam.orthomap \\
+      -dbname taxadb.sqlite
     
     # using Homologous gene family 
     $ plaza2orthomap -qt 3702 \\
-      -sl species_information.csv \\ 
+      -sl species_information.csv \\
       -og genefamily_data.HOMFAM.csv \\
-      -out 3702.homfam.orthomap
+      -out 3702.homfam.orthomap \\
+      -dbname taxadb.sqlite
     '''
     qlin_example = '''qlin example:
 
-    # get query lineage to be used with oggmap later on using query species taxid
+    # get query lineage to be used with oggmap later on using query species taxID
     # Mus musculus; 10090
-    $ qlin -qt 10090
+    $ qlin -qt 10090 \\
+      -dbname taxadb.sqlite
 
     # using query species name
-    $ qlin -q "Mus musculus"
+    $ qlin -q "Mus musculus" \\
+      -dbname taxadb.sqlite
     '''
     cds2aa_parser = subparsers.add_parser(name='cds2aa',
                                           help='translate CDS to AA and optional retain longest isoform <cds2aa -h>',
@@ -235,6 +247,9 @@ def main():
                 ncbitax.update_ncbi(args)
     if args.subcommand == 'of2orthomap':
         print(args)
+        if not args.dbname:
+            print('\nError <-dbname> : Please specify taxadb.sqlite file')
+            sys.exit()
         if not args.seqname:
             parser.print_help()
             print('\nError <-seqname>: Please specify query species name in orthofinder and taxid')
@@ -263,9 +278,13 @@ def main():
                                  out=args.out,
                                  quiet=False,
                                  continuity=True,
-                                 overwrite=args.overwrite)
+                                 overwrite=args.overwrite,
+                                 dbname=args.dbname)
     if args.subcommand == 'orthomcl2orthomap':
         print(args)
+        if not args.dbname:
+            print('\nError <-dbname> : Please specify taxadb.sqlite file')
+            sys.exit()
         if not args.tla:
             parser.print_help()
             print('\nError <-tla>: Please specify query species orthomcl short name (THREE_LETTER_ABBREV)')
@@ -284,9 +303,13 @@ def main():
                                                 out=args.out,
                                                 quiet=False,
                                                 continuity=True,
-                                                overwrite=args.overwrite)
+                                                overwrite=args.overwrite,
+                                                dbname=args.dbname)
     if args.subcommand == 'plaza2orthomap':
         print(args)
+        if not args.dbname:
+            print('\nError <-dbname> : Please specify taxadb.sqlite file')
+            sys.exit()
         if not args.qt:
             parser.print_help()
             print('\nError <-qt>: Please specify query species taxID')
@@ -306,9 +329,13 @@ def main():
                                           out=args.out,
                                           quiet=False,
                                           continuity=True,
-                                          overwrite=args.overwrite)
+                                          overwrite=args.overwrite,
+                                          dbname=args.dbname)
     if args.subcommand == 'qlin':
         print(args)
+        if not args.dbname:
+            print('\nError <-dbname> : Please specify taxadb.sqlite file')
+            sys.exit()
         if not args.q and not args.qt:
             parser.print_help()
             print('\nError <-q> <-qt>: Please specify query species name or taxid')
@@ -319,7 +346,8 @@ def main():
             sys.exit()
         qlin.get_qlin(q=args.q,
                       qt=args.qt,
-                      quiet=False)
+                      quiet=False,
+                      dbname=args.dbname)
 
 
 if __name__ == '__main__':

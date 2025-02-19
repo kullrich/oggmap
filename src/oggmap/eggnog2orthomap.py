@@ -71,7 +71,9 @@ def get_eggnog_orthomap(qt,
                         out=None,
                         quiet=False,
                         continuity=True,
-                        overwrite=True):
+                        overwrite=True,
+                        ncbi=None,
+                        dbname=None):
     """
     This function return an orthomap for a given query species and eggnog input data.
 
@@ -82,6 +84,8 @@ def get_eggnog_orthomap(qt,
     :param quiet: Specify if output should be quiet.
     :param continuity: Specify if continuity score should be calculated.
     :param overwrite: Specify if output should be overwritten.
+    :param ncbi: The NCBI taxonomic database.
+    :param dbname: Specify taxadb.sqlite file.
     :return: A list of results such as:
              orthomap, species_list, youngest_common_counts
 
@@ -92,6 +96,8 @@ def get_eggnog_orthomap(qt,
     :type quiet: bool
     :type continuity: bool
     :type overwrite: bool
+    :type ncbi: dict
+    :type dbname: str
     :rtype: list
 
     Example
@@ -101,7 +107,8 @@ def get_eggnog_orthomap(qt,
     outhandle = None
     subset_dict = None
     og_continuity_score = None
-    ncbi = NCBITaxa()
+    ncbi = qlin.load_taxadb(ncbi=ncbi,
+                            dbname=dbname)
     qname,\
         qtid,\
         qlineage,\
@@ -110,8 +117,10 @@ def get_eggnog_orthomap(qt,
         qlineagenames,\
         qlineagerev,\
         qk = qlin.get_qlin(qt=qt,
-                           quiet=True)
-    query_lineage_topo = qlin.get_lineage_topo(qt)
+                           quiet=True,
+                           ncbi=ncbi)
+    query_lineage_topo = qlin.get_lineage_topo(qt=qt,
+                                               ncbi=ncbi)
     if subset is not None:
         subset_dict = {}
         with open(subset,
@@ -259,6 +268,9 @@ def main():
     parser = define_parser()
     args = parser.parse_args()
     print(args)
+    if not args.dbname:
+        print('\nError <-dbname> : Please specify taxadb.sqlite file')
+        sys.exit()
     if not args.qt:
         parser.print_help()
         print('\nError <-qt>: Please specify query species taxID')
@@ -271,7 +283,8 @@ def main():
                         args.og,
                         subset=args.subset,
                         out=args.out,
-                        overwrite=args.overwrite)
+                        overwrite=args.overwrite,
+                        dbname=args.dbname)
 
 
 if __name__ == '__main__':

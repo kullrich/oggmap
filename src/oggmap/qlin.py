@@ -32,10 +32,12 @@ def define_parser():
 
     # get query lineage to be used with oggmap later on using query species taxID
     # Mus musculus; 10090
-    $ qlin -qt 10090 -dbname taxadb.sqlite
+    $ qlin -qt 10090 \\
+      -dbname taxadb.sqlite
 
     # using query species name
-    $ qlin -q "Mus musculus" -dbname taxadb.sqlite
+    $ qlin -q "Mus musculus" \\
+      -dbname taxadb.sqlite
     '''
     parser = argparse.ArgumentParser(
         prog='qlin',

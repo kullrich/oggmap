@@ -15,10 +15,6 @@ import sys
 import zipfile
 import argparse
 import pandas as pd
-import numpy as np
-from taxadb2.taxid import TaxID
-from taxadb2.names import SciName
-from Bio import Phylo
 from oggmap import qlin
 
 
