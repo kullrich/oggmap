@@ -14,7 +14,6 @@ dependencies:
   - statannot>=0.2.3
   - alive-progress>=3.2.0
   - biopython>=1.85
-  - taxadb2>=0.12.3
   - python-wget>=3.2
   - pytest
   - pip
@@ -23,3 +22,4 @@ dependencies:
       - leidenalg>=0.10.2
       - umap-learn>=0.5.7
       - scanpy>=1.11.0
+      - taxadb2>=0.12.3

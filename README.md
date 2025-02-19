@@ -269,13 +269,13 @@ contribution with package development as a whole,
 the [main repo](https://github.com/kullrich/oggmap/oggmap.git), branch off a
 [feature
 branch](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/about-branches)
-from `master`,
+from `main`,
 [commit](https://docs.github.com/en/desktop/contributing-and-collaborating-using-github-desktop/committing-and-reviewing-changes-to-your-project)
 and
 [push](https://docs.github.com/en/github/using-git/pushing-commits-to-a-remote-repository)
 your changes to your fork and submit a [pull
 request](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/proposing-changes-to-your-work-with-pull-requests)
-for `oggmap:master`.
+for `oggmap:main`.
 
 By contributing to this project, you agree to abide by the Code of Conduct terms.
 
