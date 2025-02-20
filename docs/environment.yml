@@ -3,6 +3,7 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
+  - python=3.10
   - setuptools>=67.6.0
   - numpy<2.2,>=1.24
   - numba>=0.61.0
@@ -18,7 +19,7 @@ dependencies:
   - pytest
   - pip
   - pip:
-      - sphinx>=7.2.6
+      - sphinx>=7.2.6<8.2.0
       - harmonypy>=0.0.10
       - leidenalg>=0.10.2
       - umap-learn>=0.5.7
