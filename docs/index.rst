@@ -36,6 +36,16 @@ What is oggmap?
    :align: center
    :alt: oggmap steps
 
+.. image:: tutorials/img/zebrafish_tei.png
+   :width: 800px
+   :align: center
+   :alt: oggmap steps
+
+.. image:: tutorials/img/nematode_pi.png
+   :width: 800px
+   :align: center
+   :alt: oggmap steps
+
 Source code is available at `oggmap GitHub repository <https://github.com/kullrich/oggmap>`_
 and at `PyPi <https://pypi.org/project/oggmap/>`_.
 
