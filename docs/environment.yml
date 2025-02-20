@@ -3,7 +3,6 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - python=3.10
   - setuptools>=67.6.0
   - numpy<2.2,>=1.24
   - numba>=0.61.0
