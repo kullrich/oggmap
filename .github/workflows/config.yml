@@ -32,6 +32,7 @@ jobs:
         python -m pip install mock
         python -m pip install nbsphinx>=0.9.3
         python -m pip install myst-nb
+        python -m pip install --upgrade sphinx_rtd_theme nbsphinx
         cd docs; make clean; make html; cd ..;
     - name: Run tests
       run: |
