@@ -19,7 +19,8 @@ dependencies:
   - pytest
   - pip
   - pip:
-      - sphinx<8.2.0,>=7.2.6
+      - sphinx>=7.2.6
+      - sphinx<8.2.0
       - harmonypy>=0.0.10
       - leidenalg>=0.10.2
       - umap-learn>=0.5.7
