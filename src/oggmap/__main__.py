@@ -14,7 +14,7 @@ import os
 import sys
 import argparse
 from Bio import SeqIO
-from oggmap import cds2aa, gtf2t2g, ncbitax, of2orthomap, orthomcl2orthomap, plaza2orthomap, qlin
+from oggmap import cds2aa, eggnog2orthomap, gtf2t2g, ncbitax, of2orthomap, orthomcl2orthomap, plaza2orthomap, qlin
 
 
 def define_parser():
@@ -46,6 +46,16 @@ def define_parser():
     
     # translate and retain longest isoform from CDS fasta file and shorten in case not multiple of three:
     $ cds2aa -i Danio_rerio.GRCz11.cds.all.fa -r ENSEMBL -o Danio_rerio.GRCz11.aa.all.longest.fa -s
+    '''
+    eggnog2orthomap_example = '''eggnog2orthomap example:
+
+    # download EggNOG v6.0 data:
+    $ wget http://eggnog6.embl.de/download/eggnog_6.0/e6.og2seqs_and_species.tsv
+
+    # extract orthomap:
+    $ eggnog2orthomap -qt 10090 \\
+      -og e6.og2seqs_and_species.tsv \\
+      -dbname taxadb.sqlite
     '''
     gtf2t2g_example = '''gtf2t2g example:
 
@@ -134,6 +144,11 @@ def define_parser():
                                           help='translate CDS to AA and optional retain longest isoform <cds2aa -h>',
                                           epilog=cds2aa_example,
                                           formatter_class=argparse.RawDescriptionHelpFormatter)
+    eggnog2orthomap_parser = subparsers.add_parser(name='eggnog2orthomap',
+                                                  help='extract orthomap from eggnog output for query species '
+                                                       '<eggnog2orthomap -h>',
+                                                  epilog=eggnog2orthomap_example,
+                                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     gtf2t2g_parser = subparsers.add_parser(name='gtf2t2g',
                                            help='extract transcript to gene table from GTF <gtf2t2g -h>',
                                            epilog=gtf2t2g_example,
@@ -154,7 +169,7 @@ def define_parser():
                                                formatter_class=argparse.RawDescriptionHelpFormatter)
     plaza2orthomap_parser = subparsers.add_parser(name='plaza2orthomap',
                                                   help='extract orthomap from PLAZA gene family data for query species '
-                                                       '<of2orthomap -h>',
+                                                       '<plaza2orthomap -h>',
                                                   epilog=plaza2orthomap_example,
                                                   formatter_class=argparse.RawDescriptionHelpFormatter)
     qlin_parser = subparsers.add_parser(name='qlin',
@@ -162,6 +177,7 @@ def define_parser():
                                         epilog=qlin_example,
                                         formatter_class=argparse.RawDescriptionHelpFormatter)
     cds2aa.add_argparse_args(parser=cds2aa_parser)
+    eggnog2orthomap.add_argparse_args(parser=eggnog2orthomap_parser)
     gtf2t2g.add_argparse_args(parser=gtf2t2g_parser)
     ncbitax.add_argparse_args(parser=ncbitax_parser)
     of2orthomap.add_argparse_args(parser=of2orthomap_parser)
@@ -209,6 +225,28 @@ def main():
                                 args.o,
                                 "fasta")
             print("translated %i sequences" % count)
+    if args.subcommand == 'eggnog2orthomap':
+        print(args)
+        if not args.dbname:
+            print('\nError <-dbname>: Please specify taxadb.sqlite file')
+            sys.exit()
+        if not args.dbname:
+            print('\nError <-dbname>: Please specify taxadb.sqlite file')
+            sys.exit()
+        if not args.qt:
+            parser.print_help()
+            print('\nError <-qt>: Please specify query species taxID')
+            sys.exit()
+        if not args.og:
+            parser.print_help()
+            print('\nError <-og>: Please specify eggnog <e6.og2seqs_and_species.tsv>')
+            sys.exit()
+        eggnog2orthomap.get_eggnog_orthomap(args.qt,
+                                            args.og,
+                                            subset=args.subset,
+                                            out=args.out,
+                                            overwrite=args.overwrite,
+                                            dbname=args.dbname)
     if args.subcommand == 'gtf2t2g':
         print(args)
         if not args.i:
@@ -248,7 +286,7 @@ def main():
     if args.subcommand == 'of2orthomap':
         print(args)
         if not args.dbname:
-            print('\nError <-dbname> : Please specify taxadb.sqlite file')
+            print('\nError <-dbname>: Please specify taxadb.sqlite file')
             sys.exit()
         if not args.seqname:
             parser.print_help()
@@ -283,7 +321,7 @@ def main():
     if args.subcommand == 'orthomcl2orthomap':
         print(args)
         if not args.dbname:
-            print('\nError <-dbname> : Please specify taxadb.sqlite file')
+            print('\nError <-dbname>: Please specify taxadb.sqlite file')
             sys.exit()
         if not args.tla:
             parser.print_help()
@@ -308,7 +346,7 @@ def main():
     if args.subcommand == 'plaza2orthomap':
         print(args)
         if not args.dbname:
-            print('\nError <-dbname> : Please specify taxadb.sqlite file')
+            print('\nError <-dbname>: Please specify taxadb.sqlite file')
             sys.exit()
         if not args.qt:
             parser.print_help()

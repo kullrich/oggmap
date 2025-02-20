@@ -26,8 +26,13 @@ def define_parser():
     """
     eggnog2orthomap_example = '''example:
 
-    #
-    $ eggnog2orthomap -qt 10090 -og
+    # download EggNOG v6.0 data:
+    $ wget http://eggnog6.embl.de/download/eggnog_6.0/e6.og2seqs_and_species.tsv
+    
+    # extract orthomap:
+    $ eggnog2orthomap -qt 10090 \\
+      -og e6.og2seqs_and_species.tsv \\
+      -dbname taxadb.sqlite
     '''
     parser = argparse.ArgumentParser(
         prog='eggnog2orthomap',
@@ -164,15 +169,18 @@ def get_eggnog_orthomap(qt,
         print('\nError <-qt>: query species taxID not in eggnog results, please check taxID.')
         sys.exit()
     species_names = [qlin.get_qlin(qt=x,
-                                   quiet=True)[0] for x in species_list]
+                                   quiet=True,
+                                   ncbi=ncbi)[0] for x in species_list]
     species_list_df = pd.DataFrame(species_names,
                                    columns=['species'])
     species_list_df['taxID'] = [int(x) for x in species_list]
-    species_list_df['lineage'] = species_list_df.apply(lambda x: ncbi.get_lineage(x[1]),
+    species_list_df['lineage'] = species_list_df.apply(lambda x: qlin.ncbi_get_lineage(qt=x.iloc[1],
+                                                                                       ncbi=ncbi),
                                                        axis=1)
     species_list_df['youngest_common'] = [qlin.get_youngest_common(qlineage,
                                                                    x) for x in species_list_df.lineage]
-    species_list_df['youngest_name'] = [list(x.values())[0] for x in [ncbi.get_taxid_translator([x])
+    species_list_df['youngest_name'] = [list(x.values())[0] for x in [qlin.ncbi_get_taxid_translator(qt_vec=[x],
+                                                                                                     ncbi=ncbi)
                                                                       for x in list(species_list_df.youngest_common)]]
     if not quiet:
         print(qname)
@@ -180,12 +188,18 @@ def get_eggnog_orthomap(qt,
         print(species_list_df)
     youngest_common_counts_df = of2orthomap.get_youngest_common_counts(qlineage,
                                                                        species_list_df)
-    for node in query_lineage_topo.traverse('postorder'):
-        nsplit = node.name.split('/')
-        if len(nsplit) == 3:
-            node.add_feature('species_count',
-                             list(youngest_common_counts_df[youngest_common_counts_df.PStaxID.isin(
-                                 [int(nsplit[1])])].counts)[0])
+    for node in qlin.traverse_postorder(query_lineage_topo.root):
+        if node.name:
+            nsplit = node.name.split('/')
+            if len(nsplit) == 3:
+                node.species_count = list(youngest_common_counts_df[youngest_common_counts_df.PStaxID.isin(
+                    [int(nsplit[1])])].counts)[0]
+    #for node in query_lineage_topo.traverse('postorder'):
+    #    nsplit = node.name.split('/')
+    #    if len(nsplit) == 3:
+    #        node.add_feature('species_count',
+    #                         list(youngest_common_counts_df[youngest_common_counts_df.PStaxID.isin(
+    #                             [int(nsplit[1])])].counts)[0])
     og_dict = {}
     continuity_dict = {}
     for og in ogs_dict.keys():
@@ -269,7 +283,7 @@ def main():
     args = parser.parse_args()
     print(args)
     if not args.dbname:
-        print('\nError <-dbname> : Please specify taxadb.sqlite file')
+        print('\nError <-dbname>: Please specify taxadb.sqlite file')
         sys.exit()
     if not args.qt:
         parser.print_help()

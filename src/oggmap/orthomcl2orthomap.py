@@ -351,7 +351,7 @@ def main():
     args = parser.parse_args()
     print(args)
     if not args.dbname:
-        print('\nError <-dbname> : Please specify taxadb.sqlite file')
+        print('\nError <-dbname>: Please specify taxadb.sqlite file')
         sys.exit()
     if not args.tla:
         parser.print_help()
