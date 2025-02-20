@@ -183,3 +183,22 @@ Code and data availability
 
 - You can download the demo input data in the notebooks using the :ref:`module_datasets`.
 
+.. toctree::
+
+    add_tei
+    commandline
+    evolutionary_indices
+    frog_example
+    geneset_overlap
+    get_orthomap
+    hydra_example
+    mouse_example
+    mytai
+    nematode_example
+    orthofinder
+    paul15_example
+    plotting
+    pstrata
+    query_lineage
+    relative_expression
+    zebrafish_example
