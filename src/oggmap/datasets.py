@@ -513,7 +513,7 @@ def zebrafish_ensembl113_orthomap(datapath='.'):
         os.makedirs(name=datapath)
     zebrafish_orthomap_filename = os.path.join(datapath,
                                                'zebrafish_ensembl_113_orthomap.tsv')
-    zebrafish_orthomap_url = 'https://zenodo.org/records/14910974/files/zebrafish_ensembl_113_orthomap.tsv'
+    zebrafish_orthomap_url = 'https://zenodo.org/records/14911022/files/zebrafish_ensembl_113_orthomap.tsv'
     wget.download(url=zebrafish_orthomap_url,
                   out=datapath)
     return zebrafish_orthomap_filename
