@@ -27,7 +27,7 @@ def define_parser():
     ncbitax_example = '''ncbitax example:
 
     #update ncbi taxonomy database:
-    ncbitax -u -outdir taxadb -type taxa -dbname taxadb.sqlite
+    ncbitax -u -outdir taxadb -t taxa -dbname taxadb.sqlite
     '''
     parser = argparse.ArgumentParser(
         prog='ncbitax',
@@ -83,11 +83,13 @@ def update_ncbi(args):
 
     Example
     -------
+    >>> import sys
     >>> from oggmap import ncbitax
+    >>> outdir = 'taxadb'
+    >>> dbname = 'taxadb.sqlite'
+    >>> sys.argv = ['ncbitax', '-u', '-outdir', outdir, '-t', 'taxa', '-dbname', dbname]
     >>> update_parser = ncbitax.define_parser()
     >>> update_args = update_parser.parse_args()
-    >>> update_args.outdir = 'taxadb'
-    >>> update_args.dbname = 'taxadb.sqlite'
     >>> ncbitax.update_ncbi(update_args)
     """
     #ncbi = NCBITaxa()

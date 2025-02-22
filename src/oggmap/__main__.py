@@ -71,7 +71,7 @@ def define_parser():
     ncbitax_example = '''ncbitax example:
 
     #update ncbi taxonomy database:
-    ncbitax -u -outdir taxadb -type taxa -dbname taxadb.sqlite
+    ncbitax -u -outdir taxadb -t taxa -dbname taxadb.sqlite
     '''
     of2orthomap_example = '''of2orthomap example:
 
