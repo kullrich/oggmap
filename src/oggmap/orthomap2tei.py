@@ -1941,6 +1941,7 @@ def get_bins(tobin_df,
     """
     if len(q) == 0:
         print('at least provide one quantile value')
+    tobin_df[bincol] = tobin_df[bincol].astype(str)
     tobin_df[bincol + '_binned'] = np.nan
     tobin_df[bincol + '_bins'] = np.nan
     qs = np.nanquantile(a=tobin_df[bincol], q=q, method=method)
