@@ -87,7 +87,7 @@ You need to enter a token to access jupyter. The token can be found in your term
 ::
 
     from oggmap import qlin
-    qlin.get_qtid(q='Arabidopsis thaliana')
+    qlin.get_qtid(q='Arabidopsis thaliana', dbname='taxadb.sqlite')
 
 Docker image build information
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

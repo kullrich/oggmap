@@ -61,7 +61,8 @@ Install oggmap
 Python Requirements
 ^^^^^^^^^^^^^^^^^^^
 
-- oggmap was developed using Python `3.8`. We do not support Python `2.7x` or Python `<=3.7`.
+- oggmap v0.0.1 was developed using Python `3.8`. We do not support Python `2.7x` or Python `<=3.7`.
+- oggmap v0.0.2 was developed using Python `3.10`. We do not support Python `2.7x` or Python `<=3.10`.
 
 oggmap installation using conda and pip
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -71,7 +72,7 @@ oggmap installation using conda and pip
 
   The environment is created with `conda create` in which oggmap is installed.
 
-  If you do not have a working installation of Python `3.8` (or later), consider
+  If you do not have a working installation of Python `3.10` (or later), consider
   installing `Anaconda <https://docs.anaconda.com/anaconda/install/>`_ or `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`_. Then run:
 
   ::

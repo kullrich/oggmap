@@ -39,7 +39,7 @@ Quick start - Singularity - bash
 
     cd /mnt/data_folder
     oggmap -h
-    oggmap qlin -q "Arabidopsis thaliana"
+    oggmap qlin -q "Arabidopsis thaliana" -dbname "taxadb.sqlite"
 
 Docker image build information
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

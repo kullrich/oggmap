@@ -483,6 +483,42 @@ def zebrafish_ensembl110_orthomap(datapath='.'):
     return zebrafish_orthomap_filename
 
 
+def zebrafish_ensembl113_orthomap(datapath='.'):
+    """
+    Pre-calculated and gene ID matched orthomap for Danio rerio extracted from OrthoFinder results:
+
+    OrthoFinder results for all translated coding sequences (CDS) from Ensembl release-113
+    (keeping only longest isoforms)
+    and Xtropicalisv9.0.Named.primaryTrs.pep.fa from www.xenbase.org.
+
+    All files can be obtained from here:
+    https://doi.org/10.5281/zenodo.7242263
+
+    Gene ID matching was done using the following GTF file for species Danio rerio from ensembl release-113:
+    https://ftp.ensembl.org/pub/release-113/gtf/danio_rerio/
+
+    :param datapath: Path to safe dataset.
+    :return: Path to Orthomap file.
+
+    :type datapath: str
+    :rtype: str
+
+    Example
+    -------
+    >>> from oggmap import datasets
+    >>> datasets.zebrafish_ensembl113_orthomap(datapath='.')
+    """
+    if not os.path.exists(datapath):
+        print('datapath does not exist, is created now')
+        os.makedirs(name=datapath)
+    zebrafish_orthomap_filename = os.path.join(datapath,
+                                               'zebrafish_ensembl_113_orthomap.tsv')
+    zebrafish_orthomap_url = 'https://zenodo.org/records/14910974/files/zebrafish_ensembl_113_orthomap.tsv'
+    wget.download(url=zebrafish_orthomap_url,
+                  out=datapath)
+    return zebrafish_orthomap_filename
+
+
 def ma21_fst(datapath='.'):
     """
     Pre-calculated TajimaD, NormalizedPi, FayWu and Fst for Caenorhabditis elegans from:
