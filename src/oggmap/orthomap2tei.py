@@ -797,7 +797,7 @@ def get_pmatrix(adata,
                                           how='left',
                                           on='GeneID')['Phylostrata'])
         print(var_names_df_chunk)
-        print(phylostrata_chunk)
+        print(len(phylostrata_chunk))
         adata_pmatrix_chunk.var['Phylostrata'] = phylostrata_chunk
         adata_pmatrix_chunks.append(adata_pmatrix_chunk)
         all_phylostrata_chunks.append(phylostrata_chunk)
