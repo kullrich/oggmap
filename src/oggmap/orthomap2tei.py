@@ -524,7 +524,8 @@ def get_tei(adata,
             bt=10,
             normalize_total=True,
             log1p=True,
-            target_sum=1e6):
+            target_sum=1e6,
+            chunk_size=10000):
     """
     This function computes the phylogenetically based transcriptome evolutionary
     index (TEI) similar to Domazet-Loso & Tautz, 2010.
@@ -559,6 +560,7 @@ def get_tei(adata,
     :param normalize_total: Normalize counts per cell prior TEI calculation.
     :param log1p: Logarithmize the data matrix prior TEI calculation.
     :param target_sum: After normalization, each observation (cell) has a total count equal to target_sum.
+    :param chunk_size: Number of chuns.
     :return: Transcriptome evolutionary index (TEI) values.
 
     :type adata: AnnData
@@ -575,6 +577,7 @@ def get_tei(adata,
     :type normalize_total: bool
     :type log1p: bool
     :type target_sum: float
+    :type chunk_size: int
     :rtype: pandas.DataFrame
 
     Example
@@ -643,27 +646,40 @@ def get_tei(adata,
     >>>     boot=True,
     >>>     bt=10)
     """
-    var_names_df,\
-        id_age_df_keep_subset,\
-        adata_counts,\
-        var_names_subset,\
-        sumx,\
-        sumx_recd,\
-        ps,\
-        psd = _get_psd(adata=adata,
-                       gene_id=gene_id,
-                       gene_age=gene_age,
-                       keep=keep,
-                       layer=layer,
-                       normalize_total=normalize_total,
-                       log1p=log1p,
-                       target_sum=target_sum)
-    wmatrix = psd.dot(adata_counts.transpose()).transpose()
-    pmatrix = sumx_recd.dot(wmatrix)
-    tei = pmatrix.sum(1)
-    tei_df = pd.DataFrame(tei,
+    tei_df = pd.DataFrame(index=adata.obs_names,
                           columns=[obs_name])
-    tei_df.index = adata.obs_names
+    tei_boot_df = pd.DataFrame()
+    if boot:
+        tei_boot_df = pd.DataFrame(index=adata.obs_names, columns=[f'boot_{b}' for b in range(bt)])
+    for i in range(0, adata.shape[0], chunk_size):
+        adata_subset = adata[i:i+chunk_size]
+        var_names_df_chunk,\
+            id_age_df_keep_subset_chunk,\
+            adata_counts_chunk,\
+            var_names_subset_chunk,\
+            sumx_chunk,\
+            sumx_recd_chunk,\
+            ps_chunk,\
+            psd_chunk = _get_psd(adata=adata_subset,
+                                 gene_id=gene_id,
+                                 gene_age=gene_age,
+                                 keep=keep,layer=layer,
+                                 normalize_total=normalize_total,
+                                 log1p=log1p,
+                                 target_sum=target_sum)
+        wmatrix_chunk = psd_chunk.dot(adata_counts_chunk.transpose()).transpose()
+        pmatrix_chunk = sumx_recd_chunk.dot(wmatrix_chunk)
+        tei_chunk = pmatrix_chunk.sum(1)
+
+        tei_df.iloc[i:i+chunk_size, 0] = tei_chunk
+        if boot:
+            with alive_bar(bt) as bar:
+                for b in range(bt):
+                    np.random.shuffle(ps_chunk)
+                    psd_chunk_shuffled = scipy.sparse.diags(ps_chunk)
+                    tei_boot = sumx_recd_chunk.dot(psd_chunk_shuffled.dot(adata_counts_chunk.transpose()).transpose()).sum(1)
+                    tei_boot_df.iloc[i:i+chunk_size, b] = tei_boot
+                    bar()
     if add_var:
         add_gene_age2adata_var(adata=adata,
                                gene_id=gene_id,
@@ -672,15 +688,7 @@ def get_tei(adata,
                                var_name=var_name)
     if add_obs:
         adata.obs[obs_name] = tei_df
-    if boot:
-        with alive_bar(bt) as bar:
-            for i in range(bt):
-                np.random.shuffle(ps)
-                psd = scipy.sparse.diags(ps)
-                tei = sumx_recd.dot(psd.dot(adata_counts.transpose()).transpose()).sum(1)
-                tei_df[i] = tei
-                bar()
-    return tei_df
+    return (tei_df, tei_boot_df) if boot else tei_df
 
 
 def get_pmatrix(adata,
