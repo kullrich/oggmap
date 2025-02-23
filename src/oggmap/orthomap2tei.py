@@ -671,14 +671,14 @@ def get_tei(adata,
         pmatrix_chunk = sumx_recd_chunk.dot(wmatrix_chunk)
         tei_chunk = pmatrix_chunk.sum(1)
 
-        tei_df.iloc[i:i+chunk_size, 0] = tei_chunk
+        tei_df.iloc[i:i+chunk_size, 0] = tei_chunk.ravel()
         if boot:
             with alive_bar(bt) as bar:
                 for b in range(bt):
                     np.random.shuffle(ps_chunk)
                     psd_chunk_shuffled = scipy.sparse.diags(ps_chunk)
                     tei_boot = sumx_recd_chunk.dot(psd_chunk_shuffled.dot(adata_counts_chunk.transpose()).transpose()).sum(1)
-                    tei_boot_df.iloc[i:i+chunk_size, b] = tei_boot
+                    tei_boot_df.iloc[i:i+chunk_size, b] = tei_boot.ravel()
                     bar()
     if add_var:
         add_gene_age2adata_var(adata=adata,
