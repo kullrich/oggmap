@@ -764,23 +764,6 @@ def get_pmatrix(adata,
     >>>     gene_id=query_orthomap['GeneID'],
     >>>     gene_age=query_orthomap['Phylostratum'])
     """
-    var_names_df, \
-        id_age_df_keep_subset, \
-        adata_counts, \
-        var_names_subset, \
-        sumx, \
-        sumx_recd, \
-        ps, \
-        psd = _get_psd(adata=adata,
-                             gene_id=gene_id,
-                             gene_age=gene_age,
-                             keep=keep,
-                             layer=layer,
-                             normalize_total=normalize_total,
-                             log1p=log1p,
-                             target_sum=target_sum)
-    print(var_names_df)
-    print(var_names_subset)
     adata_pmatrix_chunks = []
     all_phylostrata_chunks = []
     all_id_age_df_keep_subset_chunks = []
@@ -807,14 +790,11 @@ def get_pmatrix(adata,
         adata_pmatrix_chunk.layers[layer_name] = pmatrix_chunk
         adata_pmatrix_chunk.obs_names = adata_subset.obs_names
         adata_pmatrix_chunk.var_names = var_names_subset_chunk
-        print(var_names_df_chunk)
-        print(var_names_subset_chunk)
-        phylostrata_chunk = list(pd.merge(left=pd.DataFrame(adata_pmatrix_chunk.var_names,
+        phylostrata_chunk = list(pd.merge(left=pd.DataFrame(adata_pmatrix_chunk.var_names.values,
                                                             columns=['GeneID']),
                                           right=var_names_df_chunk,
                                           how='left',
                                           on='GeneID')['Phylostrata'])
-        print(phylostrata_chunk)
         adata_pmatrix_chunk.var['Phylostrata'] = phylostrata_chunk
         adata_pmatrix_chunks.append(adata_pmatrix_chunk)
         all_phylostrata_chunks.append(phylostrata_chunk)
