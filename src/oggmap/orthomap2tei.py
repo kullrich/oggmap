@@ -464,7 +464,7 @@ def add_gene_age2adata_var(adata,
                             how='left',
                             on='GeneID')
     # add gene age
-    adata.var[var_name] = list(var_names_df['Phylostrata'])
+    adata.var.loc[:, var_name] = list(var_names_df['Phylostrata'])
 
 
 def _get_pairwise_comb_self(list1, exclude_self=True):
@@ -525,7 +525,7 @@ def get_tei(adata,
             normalize_total=True,
             log1p=True,
             target_sum=1e6,
-            chunk_size=10000):
+            chunk_size=100000):
     """
     This function computes the phylogenetically based transcriptome evolutionary
     index (TEI) similar to Domazet-Loso & Tautz, 2010.
@@ -670,7 +670,6 @@ def get_tei(adata,
         wmatrix_chunk = psd_chunk.dot(adata_counts_chunk.transpose()).transpose()
         pmatrix_chunk = sumx_recd_chunk.dot(wmatrix_chunk)
         tei_chunk = pmatrix_chunk.sum(1)
-
         tei_df.iloc[i:i+chunk_size, 0] = tei_chunk.ravel()
         if boot:
             with alive_bar(bt) as bar:
