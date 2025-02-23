@@ -790,6 +790,7 @@ def get_pmatrix(adata,
         adata_pmatrix_chunk.layers[layer_name] = pmatrix_chunk
         adata_pmatrix_chunk.obs_names = adata_subset.obs_names
         adata_pmatrix_chunk.var_names = var_names_subset_chunk
+        print(adata_pmatrix_chunk.var_names)
         phylostrata_chunk = list(pd.merge(left=pd.DataFrame(adata_pmatrix_chunk.var_names,
                                                             columns=['GeneID']),
                                           right=var_names_df_chunk,
