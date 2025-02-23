@@ -799,7 +799,7 @@ def get_pmatrix(adata,
         adata_pmatrix_chunks.append(adata_pmatrix_chunk)
         all_phylostrata_chunks.append(phylostrata_chunk)
         all_id_age_df_keep_subset_chunks.append(id_age_df_keep_subset_chunk)
-    adata_pmatrix = adata_pmatrix_chunks[0].concatenate(*adata_pmatrix_chunks[1:])
+    adata_pmatrix = ad.concat(adata_pmatrix_chunks)
     if add_obs:
         for ko in adata.obs.keys():
             adata_pmatrix.obs[ko] = adata.obs[ko]
