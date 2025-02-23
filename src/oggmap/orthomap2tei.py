@@ -766,6 +766,7 @@ def get_pmatrix(adata,
     """
     adata_pmatrix_chunks = []
     all_phylostrata_chunks = []
+    all_var_names_df_chunks = []
     all_id_age_df_keep_subset_chunks = []
     for i in range(0, adata.shape[0], chunk_size):
         adata_subset = adata[i:i+chunk_size]
@@ -799,6 +800,7 @@ def get_pmatrix(adata,
         adata_pmatrix_chunks.append(adata_pmatrix_chunk)
         all_phylostrata_chunks.append(phylostrata_chunk)
         all_id_age_df_keep_subset_chunks.append(id_age_df_keep_subset_chunk)
+        all_var_names_df_chunks.append(var_names_df_chunk)
     adata_pmatrix = ad.concat(adata_pmatrix_chunks)
     if add_obs:
         for ko in adata.obs.keys():
@@ -809,6 +811,11 @@ def get_pmatrix(adata,
                                              right=adata.var[kv][adata.var_names.isin(all_id_age_df_keep_subset_chunks[0]['GeneID'])],
                                              left_index=True,
                                              right_index=True)[kv]
+    adata_pmatrix.var['Phylostrata'] = list(pd.merge(left=pd.DataFrame(adata_pmatrix.var_names.values,
+                                                                       columns=['GeneID']),
+                                                     right=all_var_names_df_chunks[0],
+                                                     how='left',
+                                                     on='GeneID')['Phylostrata'])
     return adata_pmatrix
 
 
