@@ -687,6 +687,7 @@ def get_tei(adata,
                                var_name=var_name)
     if add_obs:
         adata.obs[obs_name] = tei_df
+        adata.obs[obs_name] = adata.obs[obs_name].astype('float64')
     return (tei_df, tei_boot_df) if boot else tei_df
 
 
@@ -700,7 +701,8 @@ def get_pmatrix(adata,
                 add_obs=True,
                 normalize_total=True,
                 log1p=True,
-                target_sum=1e6):
+                target_sum=1e6,
+                chunk_size=100000):
     """
     This function computes the partial transcriptome evolutionary index (TEI) values for each single gene.
 
@@ -727,6 +729,7 @@ def get_pmatrix(adata,
     :param normalize_total: Normalize counts per cell prior TEI calculation.
     :param log1p: Logarithmize the data matrix prior TEI calculation.
     :param target_sum: After normalization, each observation (cell) has a total count equal to target_sum.
+    :param chunk_size: Number of chuns.
     :return: Partial transcriptome evolutionary index (TEI) values.
 
     :type adata: AnnData
@@ -740,6 +743,7 @@ def get_pmatrix(adata,
     :type normalize_total: bool
     :type log1p: bool
     :type target_sum: float
+    :type chunk_size: int
     :rtype: AnnData
 
     Example
@@ -760,41 +764,51 @@ def get_pmatrix(adata,
     >>>     gene_id=query_orthomap['GeneID'],
     >>>     gene_age=query_orthomap['Phylostratum'])
     """
-    var_names_df,\
-        id_age_df_keep_subset,\
-        adata_counts,\
-        var_names_subset,\
-        sumx,\
-        sumx_recd,\
-        ps,\
-        psd = _get_psd(adata=adata,
-                       gene_id=gene_id,
-                       gene_age=gene_age,
-                       keep=keep,
-                       layer=layer,
-                       normalize_total=normalize_total,
-                       log1p=log1p,
-                       target_sum=target_sum)
-    wmatrix = psd.dot(adata_counts.transpose()).transpose()
-    pmatrix = sumx_recd.dot(wmatrix)
-    adata_pmatrix = ad.AnnData(adata_counts)
-    adata_pmatrix.layers[layer_name] = pmatrix
-    adata_pmatrix.obs_names = adata.obs_names
-    adata_pmatrix.var_names = var_names_subset
+    adata_pmatrix_chunks = []
+    all_phylostrata_chunks = []
+    all_id_age_df_keep_subset_chunks = []
+    for i in range(0, adata.shape[0], chunk_size):
+        adata_subset = adata[i:i+chunk_size]
+        var_names_df_chunk,\
+            id_age_df_keep_subset_chunk,\
+            adata_counts_chunk,\
+            var_names_subset_chunk,\
+            sumx_chunk,\
+            sumx_recd_chunk,\
+            ps_chunk,\
+            psd_chunk = _get_psd(adata=adata_subset,
+                                 gene_id=gene_id,
+                                 gene_age=gene_age,
+                                 keep=keep,
+                                 layer=layer,
+                                 normalize_total=normalize_total,
+                                 log1p=log1p,
+                                 target_sum=target_sum)
+        wmatrix_chunk = psd_chunk.dot(adata_counts_chunk.transpose()).transpose()
+        pmatrix_chunk = sumx_recd_chunk.dot(wmatrix_chunk)
+        adata_pmatrix_chunk = ad.AnnData(adata_counts_chunk)
+        adata_pmatrix_chunk.layers[layer_name] = pmatrix_chunk
+        adata_pmatrix_chunk.obs_names = adata_subset.obs_names
+        adata_pmatrix_chunk.var_names = var_names_subset_chunk
+        phylostrata_chunk = list(pd.merge(left=pd.DataFrame(adata_pmatrix_chunk.var_names,
+                                                            columns=['GeneID']),
+                                          right=var_names_df_chunk,
+                                          how='left',
+                                          on='GeneID')['Phylostrata'])
+        adata_pmatrix_chunk.var['Phylostrata'] = phylostrata_chunk
+        adata_pmatrix_chunks.append(adata_pmatrix_chunk)
+        all_phylostrata_chunks.append(phylostrata_chunk)
+        all_id_age_df_keep_subset_chunks.append(id_age_df_keep_subset_chunk)
+    adata_pmatrix = adata_pmatrix_chunks[0].concatenate(*adata_pmatrix_chunks[1:])
     if add_obs:
         for ko in adata.obs.keys():
             adata_pmatrix.obs[ko] = adata.obs[ko]
     if add_var:
         for kv in adata.var.keys():
             adata_pmatrix.var[kv] = pd.merge(left=adata_pmatrix.var,
-                                             right=adata.var[kv][adata.var_names.isin(id_age_df_keep_subset['GeneID'])],
+                                             right=adata.var[kv][adata.var_names.isin(all_id_age_df_keep_subset_chunks[0]['GeneID'])],
                                              left_index=True,
                                              right_index=True)[kv]
-    adata_pmatrix.var['Phylostrata'] = list(pd.merge(left=pd.DataFrame(adata_pmatrix.var_names,
-                                                                       columns=['GeneID']),
-                                                     right=var_names_df,
-                                                     how='left',
-                                                     on='GeneID')['Phylostrata'])
     return adata_pmatrix
 
 
