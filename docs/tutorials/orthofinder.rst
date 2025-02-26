@@ -3,6 +3,13 @@
 Step 0 - run OrthoFinder
 ========================
 
+.. note::
+   In version 0.0.2 from `oggmap` now it is possible to directly extract an orthomap from the following tools:
+
+   - `OrthoFinder <https:https://github.com/davidemms/OrthoFinder>`_
+   - `SonicParanoid2 <https://gitlab.com/salvo981/sonicparanoid2>`_
+   - `Broccoli <https://github.com/rderelle/Broccoli>`_
+
 In order to extract an orthomap from `OrthoFinder <https:https://github.com/davidemms/OrthoFinder>`_ results, one needs to run `OrthoFinder <https:https://github.com/davidemms/OrthoFinder>`_.
 
 Mandatory OrthoFinder results files
@@ -43,9 +50,9 @@ Install OrthoFinder
 OrthoFinder installation using conda
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-  ::
+.. code-block:: bash
 
-      conda install -c bioconda orthofinder
+   conda install -c bioconda orthofinder
 
 Run OrthoFinder
 ---------------
@@ -56,11 +63,11 @@ The species peptide file can be pre-processed e.g. to just contain the longest i
 
 To extract the longest isoform `oggmap`
 
-  ::
+.. code-block:: bash
 
-      wget https://ftp.ensembl.org/pub/release-105/fasta/danio_rerio/cds/Danio_rerio.GRCz11.cds.all.fa.gz
-      gunzip Danio_rerio.GRCz11.cds.all.fa.gz
-      oggmap cds2aa -i Danio_rerio.GRCz11.cds.all.fa -r ENSEMBL -o Danio_rerio.GRCz11.aa.all.longest.fa
+   wget https://ftp.ensembl.org/pub/release-113/fasta/danio_rerio/cds/Danio_rerio.GRCz11.cds.all.fa.gz
+   gunzip Danio_rerio.GRCz11.cds.all.fa.gz
+   oggmap cds2aa -i Danio_rerio.GRCz11.cds.all.fa -r ENSEMBL -o Danio_rerio.GRCz11.aa.all.longest.fa
 
 .. warning::
    **OrthoFinder by default use diamond as the sequence search engine.** To increase sequence search sensitivity, at least use the '-S diamond_ultra_sens' option.
@@ -73,13 +80,13 @@ To extract the longest isoform `oggmap`
 
 To change the `'config.json' <https://raw.githubusercontent.com/davidemms/OrthoFinder/master/scripts_of/config.json>`_ and the 'diamond_ultra_sens' option from OrthoFinder, please change the 'cofig.json' as follows:
 
-   ::
+.. code-block:: console
 
-      "diamond_ultra_sens":{
-      "program_type": "search",
-      "db_cmd": "diamond makedb --ignore-warnings --in INPUT -d OUTPUT",
-      "search_cmd": "diamond blastp --ignore-warnings -k0 -d DATABASE -q INPUT -o OUTPUT --ultra-sensitive -p 1 --quiet -e 0.001 --compress 1"
-      },
+   "diamond_ultra_sens":{
+   "program_type": "search",
+   "db_cmd": "diamond makedb --ignore-warnings --in INPUT -d OUTPUT",
+   "search_cmd": "diamond blastp --ignore-warnings -k0 -d DATABASE -q INPUT -o OUTPUT --ultra-sensitive -p 1 --quiet -e 0.001 --compress 1"
+   },
 
 
 Use LAST with OrthoFinder
@@ -98,13 +105,13 @@ or you might want to install with bioconda:
 To use `last <https://gitlab.com/mcfrith/last>`_ as a new sequence serach engine,
 please change the 'config.json' as follows:
 
-   ::
+.. code-block:: console
 
-      "last":{
-      "program_type": "search",
-      "db_cmd": "lastdb -p -cR01 OUTPUT INPUT",
-      "search_cmd": "lastal -f BlastTab+ -D 1e6 DATABASE INPUT | sed -n '/^#/!p' > OUTPUT"
-      },
+   "last":{
+   "program_type": "search",
+   "db_cmd": "lastdb -p -cR01 OUTPUT INPUT",
+   "search_cmd": "lastal -f BlastTab+ -D 1e6 DATABASE INPUT | sed -n '/^#/!p' > OUTPUT"
+   },
 
 
 Typical run command
@@ -112,16 +119,16 @@ Typical run command
 
 - using diamond
 
-   ::
+.. code-block:: bash
 
-      orthofinder -t 32 -a 8 -og -o diamond_output/ -S diamond_ultra_sens -f folder_with_peptides/
+   orthofinder -t 32 -a 8 -og -o diamond_output/ -S diamond_ultra_sens -f folder_with_peptides/
 
 
 - using last
 
-   ::
+.. code-block:: bash
 
-      orthofinder -t 32 -a 8 -og -o last_output/ -S last -f folder_with_peptides/
+   orthofinder -t 32 -a 8 -og -o last_output/ -S last -f folder_with_peptides/
 
 
 Adding a new species to an existing OrthoFinder result
@@ -151,12 +158,11 @@ ORF/CDS extraction can be done with e.g. `TransDecoder <https://github.com/Trans
 using `miniprot <https://github.com/lh3/miniprot>`_ with the "newer" annotated peptides followed by `miniprothint <https://github.com/tomasbruna/miniprothint>`_ or
 using `GALBA <https://github.com/Gaius-Augustus/GALBA>`_
 
-   ::
+.. code-block:: bash
 
-       miniprot dd_Smed_v6.pcf.contigs.fasta schmidtea_mediterranea.PRJNA12585.WBPS18.protein.fa --aln > miniprot.aln
-       miniprot_boundary_scorer -o miniprot_parsed.gff -s blosum62.csv < miniprot.aln
-       miniprothint.py miniprot_parsed.gff --workdir miniprothint
-
+   miniprot dd_Smed_v6.pcf.contigs.fasta schmidtea_mediterranea.PRJNA12585.WBPS18.protein.fa --aln > miniprot.aln
+   miniprot_boundary_scorer -o miniprot_parsed.gff -s blosum62.csv < miniprot.aln
+   miniprothint.py miniprot_parsed.gff --workdir miniprothint
 
 - extract and convert CDS into peptides from the given transcriptome
 
@@ -164,15 +170,15 @@ extraction and direct conversion into peptides can be done with e.g. `gffread <h
 
 Here, first the original contig IDs are added to the gene IDs so that later a mapping against the scRNA data is possible.
 
-   ::
+.. code-block:: bash
 
-       awk -F '\t' -vOFS='\t' '{if($3=="mRNA"){gsub("ID=","ID="$1"::",$9)}; if($3!="mRNA"){gsub("Parent=", "Parent="$1"::", $9)}; print $0}' miniprot_parsed.gff > miniprot_parsed_IDs.gff
-       gffread -x dd_Smed_v6_miniprot_parsed.x.fasta -y dd_Smed_v6_miniprot_parsed.pep.fasta -g dd_Smed_v6.pcf.contigs.fasta miniprot_parsed_IDs.gff
+   awk -F '\t' -vOFS='\t' '{if($3=="mRNA"){gsub("ID=","ID="$1"::",$9)}; if($3!="mRNA"){gsub("Parent=", "Parent="$1"::", $9)}; print $0}' miniprot_parsed.gff > miniprot_parsed_IDs.gff
+   gffread -x dd_Smed_v6_miniprot_parsed.x.fasta -y dd_Smed_v6_miniprot_parsed.pep.fasta -g dd_Smed_v6.pcf.contigs.fasta miniprot_parsed_IDs.gff
 
 Now one can use the extracted peptides with `OrthoFinder <https:https://github.com/davidemms/OrthoFinder>`_ to add them to an existing `OrthoFinder <https:https://github.com/davidemms/OrthoFinder>`_ run.
 
 - Place the new species peptide files in a separate folder
 
-   ::
+.. code-block:: bash
 
-       orthofinder -t 32 -a 8 -og -S last -b last_output/Results_Sep13/WorkingDirectory/ -f new_species/
+   orthofinder -t 32 -a 8 -og -S last -b last_output/Results_Sep13/WorkingDirectory/ -f new_species/

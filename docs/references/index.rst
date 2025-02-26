@@ -21,6 +21,12 @@ Cheng, S., Pei, Y., He, L., Peng, G., Reinius, B., Tam, P.P., Jing, N. and Deng,
 reveals cellular heterogeneity of pluripotency transition and X chromosome dynamics during early mouse development.**
 *Cell reports*, **26(10)**. `https://doi.org/10.1016/j.celrep.2019.02.031 <https://doi.org/10.1016/j.celrep.2019.02.031>`_
 
+Cosentino, S., Sriswasdi, S., and Iwasaki, W. (2024). **SonicParanoid2: fast, accurate, and comprehensive orthology
+inference with machine learning and language models.** *Genome Biology*, **25(1)**. `https://doi.org/10.1186/s13059-024-03298-4 <https://doi.org/10.1186/s13059-024-03298-4>`_
+
+Derelle, R., Philippe, H., and Colbourne, J. K. (2020). **Broccoli: combining phylogenetic and network analyses for
+orthology assignment.** *Molecular Biology and Evolution*, **37(11)**.`https://doi.org/10.1093/molbev/msaa159 <https://doi.org/10.1093/molbev/msaa159>`_
+
 Domazet-Loso, T., Brajkovic J. and Tautz D. (2007). **A phylostratigraphy approach to uncover the genomic history of
 major adaptations in metazoan lineages.** *Trends in Genetics*, **23(11)**. `https://doi.org/10.1016/j.tig.2007.08.014 <https://doi.org/10.1016/j.tig.2007.08.014>`_
 
