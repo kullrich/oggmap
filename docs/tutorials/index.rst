@@ -59,7 +59,7 @@ Extracted orthomaps for all Eukaryota from `eggNOG database version 6.0 <http://
 
 .. code-block:: bash
 
-   # to get GTF from Mus musculus on Linux run:
+   # to get eggnog6_eukaryota_orthomaps on Linux run:
    wget https://zenodo.org/records/14911022/files/eggnog6_eukaryota_orthomaps.tsv.zip
 
    # on Mac:
@@ -69,10 +69,10 @@ To get an orthomap for e.g. the species *Caenorhabditis elegans* (taxID: 6239):
 
 .. code-block:: python
 
-       import pandas as pd
-       from oggmap import qlin, gtf2t2g, of2orthomap, orthomap2tei, datasets, ncbitax
-       eggnog6_eukaryota_orthomaps = pd.read_csv('eggnog6_eukaryota_orthomaps.tsv.zip', delimiter='\t')
-       query_lineage = qlin.get_qlin(q='Caenorhabditis elegans', dbname='taxadb.sqlite')
+   import pandas as pd
+   from oggmap import qlin, gtf2t2g, of2orthomap, orthomap2tei, datasets, ncbitax
+   eggnog6_eukaryota_orthomaps = pd.read_csv('eggnog6_eukaryota_orthomaps.tsv.zip', delimiter='\t')
+   query_lineage = qlin.get_qlin(q='Caenorhabditis elegans', dbname='taxadb.sqlite')
 
 .. code-block:: console
 
@@ -91,8 +91,8 @@ To get an orthomap for e.g. the species *Caenorhabditis elegans* (taxID: 6239):
 
 .. code-block:: python
 
-       query_orthomap = eggnog6_eukaryota_orthomaps[eggnog6_eukaryota_orthomaps['taxID']==query_lineage[1]]
-       query_orthomap
+   query_orthomap = eggnog6_eukaryota_orthomaps[eggnog6_eukaryota_orthomaps['taxID']==query_lineage[1]]
+   query_orthomap
 
 .. code-block:: console
 
@@ -126,9 +126,19 @@ plaza dicots database version 5.0
 
 Extracted orthomaps for all dicots (HOMFAM and ORTHOFAM) from `plaza dicots database version 5.0 <https://bioinformatics.psb.ugent.be/plaza/versions/plaza_v5_dicots/>`_ can be downloaded here:
 
-`plaza_v5_dicots_HOMFAM_orthomaps.tsv.zip <https://zenodo.org/record/8360098/files/plaza_v5_dicots_HOMFAM_orthomaps.tsv.zip>`_
+`plaza_v5_dicots_HOMFAM_orthomaps.tsv.zip <https://zenodo.org/records/14911022/files/plaza_v5_dicots_HOMFAM_orthomaps.tsv.zip>`_
 
-`plaza_v5_dicots_ORTHOFAM_orthomaps.tsv.zip <https://zenodo.org/record/8360098/files/plaza_v5_dicots_ORTHOFAM_orthomaps.tsv.zip>`_
+`plaza_v5_dicots_ORTHOFAM_orthomaps.tsv.zip <https://zenodo.org/records/14911022/files/plaza_v5_dicots_ORTHOFAM_orthomaps.tsv.zip>`_
+
+.. code-block:: bash
+
+   # to get extracted orthomaps for all dicots on Linux run:
+   wget https://zenodo.org/records/14911022/files/plaza_v5_dicots_HOMFAM_orthomaps.tsv.zip
+   wget https://zenodo.org/records/14911022/files/plaza_v5_dicots_ORTHOFAM_orthomaps.tsv.zip
+
+   # on Mac:
+   curl https://zenodo.org/records/14911022/files/plaza_v5_dicots_HOMFAM_orthomaps.tsv.zip --remote-name
+   curl https://zenodo.org/records/14911022/files/plaza_v5_dicots_ORTHOFAM_orthomaps.tsv.zip --remote-name
 
 plaza monocots database version 5.0
 -----------------------------------
@@ -137,21 +147,66 @@ plaza monocots database version 5.0
 
 Extracted orthomaps for all monocots (HOMFAM and ORTHOFAM) from `plaza monocots database version 5.0 <https://bioinformatics.psb.ugent.be/plaza/versions/plaza_v5_monocots/>`_ can be downloaded here:
 
-`plaza_v5_monocots_HOMFAM_orthomaps.tsv.zip <https://zenodo.org/record/8360098/files/plaza_v5_monocots_HOMFAM_orthomaps.tsv.zip>`_
+`plaza_v5_monocots_HOMFAM_orthomaps.tsv.zip <https://zenodo.org/records/14911022/files/plaza_v5_monocots_HOMFAM_orthomaps.tsv.zip>`_
 
 `plaza_v5_monocots_ORTHOFAM_orthomaps.tsv.zip <https://zenodo.org/record/8360098/files/plaza_v5_monocots_ORTHOFAM_orthomaps.tsv.zip>`_
 
+.. code-block:: bash
+
+   # to get extracted orthomaps for all monocots on Linux run:
+   wget https://zenodo.org/records/14911022/files/plaza_v5_monocots_HOMFAM_orthomaps.tsv.zip
+   wget https://zenodo.org/records/14911022/files/plaza_v5_monocots_ORTHOFAM_orthomaps.tsv.zip
+
+   # on Mac:
+   curl https://zenodo.org/records/14911022/files/plaza_v5_dicots_HOMFAM_orthomaps.tsv.zip --remote-name
+   curl https://zenodo.org/records/14911022/files/plaza_v5_monocots_ORTHOFAM_orthomaps.tsv.zip --remote-name
+
 To get an orthomap for e.g. the species *Arabidopsis thaliana* (taxID: 3702):
 
-   ::
+.. code-block:: python
 
-       from oggmap import qlin, gtf2t2g, of2orthomap, orthomap2tei, datasets
-       import pandas as pd
-       plaza_v5_dicots_HOMFAM_orthomaps = pd.read_csv('plaza_v5_dicots_HOMFAM_orthomaps.tsv.zip', delimiter='\t')
-       query_lineage = qlin.get_qlin(q='Arabidopsis thaliana')
-       query_orthomap = plaza_v5_dicots_HOMFAM_orthomaps[plaza_v5_dicots_HOMFAM_orthomaps['taxID']==query_lineage[1]]
-       query_orthomap
+   import pandas as pd
+   from oggmap import qlin, gtf2t2g, of2orthomap, orthomap2tei, datasets
+   plaza_v5_dicots_HOMFAM_orthomaps = pd.read_csv('plaza_v5_dicots_HOMFAM_orthomaps.tsv.zip', delimiter='\t')
+   query_lineage = qlin.get_qlin(q='Arabidopsis thaliana', dbname='taxadb.sqlite')
 
+.. code-block:: console
+
+   query name: Arabidopsis thaliana
+   query taxID: 3702
+   query kingdom: Eukaryota
+   query lineage names:
+   ['root(1)', 'cellular organisms(131567)', 'Eukaryota(2759)', 'Viridiplantae(33090)',
+   'Streptophyta(35493)', 'Streptophytina(131221)', 'Embryophyta(3193)', 'Tracheophyta(58023)',
+   'Euphyllophyta(78536)', 'Spermatophyta(58024)', 'Magnoliopsida(3398)', 'Mesangiospermae(1437183)',
+   'eudicotyledons(71240)', 'Gunneridae(91827)', 'Pentapetalae(1437201)', 'rosids(71275)',
+   'malvids(91836)', 'Brassicales(3699)', 'Brassicaceae(3700)', 'Camelineae(980083)',
+   'Arabidopsis(3701)', 'Arabidopsis thaliana(3702)']
+   query lineage:
+   [1, 131567, 2759, 33090, 35493, 131221, 3193, 58023, 78536, 58024, 3398, 1437183,
+   71240, 91827, 1437201, 71275, 91836, 3699, 3700, 980083, 3701, 3702]
+
+.. code-block:: python
+
+   query_orthomap = plaza_v5_dicots_HOMFAM_orthomaps[plaza_v5_dicots_HOMFAM_orthomaps['taxID']==query_lineage[1]]
+   query_orthomap
+
+.. code-block:: console
+
+   >>>       shortname           common_name  taxID  ... PStaxID                PSname  PScontinuity
+   290600       ath  Arabidopsis_thaliana   3702  ...  131221        Streptophytina           1.0
+   290601       ath  Arabidopsis_thaliana   3702  ...  131221        Streptophytina           1.0
+   290602       ath  Arabidopsis_thaliana   3702  ...  131221        Streptophytina           1.0
+   290603       ath  Arabidopsis_thaliana   3702  ...  131221        Streptophytina           1.0
+   290604       ath  Arabidopsis_thaliana   3702  ...  131221        Streptophytina           1.0
+   ...          ...                   ...    ...  ...     ...                   ...           ...
+   318250       ath  Arabidopsis_thaliana   3702  ...    3702  Arabidopsis thaliana           1.0
+   318251       ath  Arabidopsis_thaliana   3702  ...    3702  Arabidopsis thaliana           1.0
+   318252       ath  Arabidopsis_thaliana   3702  ...    3702  Arabidopsis thaliana           1.0
+   318253       ath  Arabidopsis_thaliana   3702  ...    3702  Arabidopsis thaliana           1.0
+   318254       ath  Arabidopsis_thaliana   3702  ...    3702  Arabidopsis thaliana           1.0
+
+   [27655 rows x 9 columns]
 
 .. _tutorial-oggmap-steps:
 
