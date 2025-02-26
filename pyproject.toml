@@ -54,7 +54,7 @@ dependencies = [
 
 [project.optional-dependencies]
 gpu = [
-    "rapids-singlecell 0.11.1"
+    "rapids-singlecell>=0.11.1"
 ]
 
 [project.urls]
