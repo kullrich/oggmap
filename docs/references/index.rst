@@ -17,6 +17,9 @@ Cao, J., Spielmann, M., Qiu, X., Huang, X., Ibrahim, D.M., Hill, A.J., Zhang, F.
 Steemers, F.J. and Trapnell, C. (2019). **The single-cell transcriptional landscape of mammalian organogenesis.**
 *Nature*, **566(7745)**. `https://doi.org/10.1038/s41586-019-0969-x <https://doi.org/10.1038/s41586-019-0969-x>`_
 
+Charlier, F., Weber, M., Izak, D., Harkin, E., Magnus, M., Lalli, J., Fresnais, L., Chan, M., Markov, N., Amsalem, O.,
+Proost, S., Krasoulis, A., and Repplinger, S. (2022). **Statannotations (v0.7.1).** *Zenodo*. `<https://doi.org/10.5281/zenodo.7213391 https://doi.org/10.5281/zenodo.7213391>`_
+
 Cheng, S., Pei, Y., He, L., Peng, G., Reinius, B., Tam, P.P., Jing, N. and Deng, Q. (2019). **Single-cell RNA-seq
 reveals cellular heterogeneity of pluripotency transition and X chromosome dynamics during early mouse development.**
 *Cell reports*, **26(10)**. `https://doi.org/10.1016/j.celrep.2019.02.031 <https://doi.org/10.1016/j.celrep.2019.02.031>`_

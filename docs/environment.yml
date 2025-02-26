@@ -17,7 +17,7 @@ dependencies:
   - scipy>=1.15.1
   - seaborn>=0.13.2
   - setuptools>=67.6.0
-  - statannot>=0.2.3
+  - statannotations>=0.7.1
   - pip:
       - harmonypy>=0.0.10
       - leidenalg>=0.10.2

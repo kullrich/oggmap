@@ -10,6 +10,12 @@ Step 0 - run OrthoFinder
    - `SonicParanoid2 <https://gitlab.com/salvo981/sonicparanoid2>`_
    - `Broccoli <https://github.com/rderelle/Broccoli>`_
 
+   and the following databases:
+
+   - `EggNOG v6.0 <http://eggnog6.embl.de/>`_
+   - `PLAZA <https://bioinformatics.psb.ugent.be/plaza/>`_
+   - `OrthoMCL <https://orthomcl.org/orthomcl/app>`_
+
 In order to extract an orthomap from `OrthoFinder <https:https://github.com/davidemms/OrthoFinder>`_ results, one needs to run `OrthoFinder <https:https://github.com/davidemms/OrthoFinder>`_.
 
 Mandatory OrthoFinder results files

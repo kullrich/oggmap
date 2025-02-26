@@ -15,6 +15,7 @@ import scanpy as sc
 import seaborn as sns
 from alive_progress import alive_bar
 from statannot import add_stat_annotation
+from statannotations.Annotator import Annotator
 
 
 def read_orthomap(orthomapfile):
@@ -221,7 +222,7 @@ def _split_gene_id_by_gene_age(gene_id,
     >>> query_orthomap = orthomap2tei.read_orthomap(orthomapfile=sun21_orthomap_file)
     >>> orthomap2tei._split_gene_id_by_gene_age(
     >>>     gene_id=query_orthomap['GeneID'],
-    >>>     gene_age=query_orthomap['Phylostrata'],
+    >>>     gene_age=query_orthomap['Phylostratum'],
     >>>     keep='min')
     """
     id_age_df = pd.DataFrame(data={'GeneID': gene_id,
@@ -353,13 +354,13 @@ def _get_psd(adata,
     >>> #packer19_small = sc.read('packer19_small.h5ad')
     >>> packer19_small = datasets.packer19_small(datapath='.')
     >>> # get psd from existing adata object
-    >>> celegans_var_names_df,
-    >>>     celegans_id_age_df_keep_subset,
-    >>>     celegans_adata_counts,
-    >>>     celegans_var_names_subset,
-    >>>     celegans_sumx,
-    >>>     celegans_sumx_recd,
-    >>>     celegans_ps,
+    >>> celegans_var_names_df,\
+    >>>     celegans_id_age_df_keep_subset,\
+    >>>     celegans_adata_counts,\
+    >>>     celegans_var_names_subset,\
+    >>>     celegans_sumx,\
+    >>>     celegans_sumx_recd,\
+    >>>     celegans_ps,\
     >>>     celegans_psd = orthomap2tei._get_psd(
     >>>     adata=packer19_small,
     >>>     gene_id=query_orthomap['GeneID'],
@@ -586,6 +587,7 @@ def get_tei(adata,
     >>> import matplotlib.pyplot as plt
     >>> import seaborn as sns
     >>> from statannot import add_stat_annotation
+    >>> from statannotations.Annotator import Annotator
     >>> from oggmap import datasets, orthomap2tei
     >>> # download pre-calculated orthomap
     >>> #query_orthomap = orthomap2tei.read_orthomap(orthomapfile='Sun2021_Orthomap.tsv')
@@ -607,17 +609,19 @@ def get_tei(adata,
     >>>     x='embryo.time.bin',
     >>>     y='tei',
     >>>     data=packer19_small.obs)
-    >>> test_results = add_stat_annotation(
+    >>> test_results = Annotator(
     >>>     ax,
     >>>     x='embryo.time.bin',
     >>>     y='tei',
-    >>>     data=packer19_small.obs,
-    >>>     box_pairs=orthomap2tei._get_pairwise_comb_self(
+    >>>     pairs=orthomap2tei._get_pairwise_comb_self(
     >>>         list1=packer19_small.obs['embryo.time.bin'].value_counts().index),
+    >>>     data=packer19_small.obs)
+    >>> test_results.configure(
     >>>     test='Mann-Whitney',
     >>>     text_format='star',
     >>>     loc='outside',
     >>>     verbose=2)
+    >>> test_results.apply_and_annotate()
     >>> plt.show()
     >>> # plot tei violinplot for each cell.type grouped by cell.type and embryo.time.bin observation
     >>> # create new observation as a combination from embryo.time.bin and cell.type
