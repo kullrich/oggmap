@@ -560,7 +560,7 @@ def get_tei(adata,
     :param normalize_total: Normalize counts per cell prior TEI calculation.
     :param log1p: Logarithmize the data matrix prior TEI calculation.
     :param target_sum: After normalization, each observation (cell) has a total count equal to target_sum.
-    :param chunk_size: Number of chuns.
+    :param chunk_size: Number of chunks.
     :return: Transcriptome evolutionary index (TEI) values.
 
     :type adata: AnnData
@@ -729,7 +729,7 @@ def get_pmatrix(adata,
     :param normalize_total: Normalize counts per cell prior TEI calculation.
     :param log1p: Logarithmize the data matrix prior TEI calculation.
     :param target_sum: After normalization, each observation (cell) has a total count equal to target_sum.
-    :param chunk_size: Number of chuns.
+    :param chunk_size: Number of chunks.
     :return: Partial transcriptome evolutionary index (TEI) values.
 
     :type adata: AnnData
@@ -811,7 +811,6 @@ def get_pmatrix(adata,
                                              right=adata.var[kv][adata.var_names.isin(all_id_age_df_keep_subset_chunks[0]['GeneID'])],
                                              left_index=True,
                                              right_index=True)[kv]
-    print(all_var_names_df_chunks[0])
     adata_pmatrix.var['Phylostrata'] = list(pd.merge(left=pd.DataFrame(adata_pmatrix.var_names.values,
                                                                        columns=['GeneID']),
                                                      right=all_var_names_df_chunks[0],
@@ -832,7 +831,8 @@ def get_pstrata(adata,
                 standard_scale=None,
                 normalize_total=True,
                 log1p=True,
-                target_sum=1e6):
+                target_sum=1e6,
+                chunk_size=100000):
     """
     This function computes the partial transcriptome evolutionary index (TEI) values combined for each stratum.
 
@@ -869,6 +869,7 @@ def get_pstrata(adata,
     :param normalize_total: Normalize counts per cell prior TEI calculation.
     :param log1p: Logarithmize the data matrix prior TEI calculation.
     :param target_sum: After normalization, each observation (cell) has a total count equal to target_sum.
+    :param chunk_size: Number of chunks.
     :return: List of two DataFrame. First DataFrame contains the summed partial TEI values per strata.
              Second DataFrame contains summed partial TEI values divided by the corresponding global TEI value,
              which represent percentage of global TEI per strata.
@@ -886,6 +887,7 @@ def get_pstrata(adata,
     :type normalize_total: bool
     :type log1p: bool
     :type target_sum: float
+    :type chunk_size: int
     :rtype: list
 
     Example
@@ -928,75 +930,83 @@ def get_pstrata(adata,
     >>> sns.heatmap(packer19_small_pstrata_grouped[1], annot=True, cmap='viridis')
     >>> plt.show()
     """
-    var_names_df,\
-        id_age_df_keep_subset,\
-        adata_counts,\
-        var_names_subset,\
-        sumx,\
-        sumx_recd,\
-        ps,\
-        psd = _get_psd(adata=adata,
-                       gene_id=gene_id,
-                       gene_age=gene_age,
-                       keep=keep,
-                       layer=layer,
-                       normalize_total=normalize_total,
-                       log1p=log1p,
-                       target_sum=target_sum)
-    wmatrix = psd.dot(adata_counts.transpose()).transpose()
-    pmatrix = sumx_recd.dot(wmatrix)
-    tei = pmatrix.sum(1)
-    phylostrata = list(set(id_age_df_keep_subset['Phylostrata']))
-    pstrata_norm_by_sumx = np.zeros((len(phylostrata), pmatrix.shape[0]))
-    pstrata_norm_by_pmatrix_sum = np.zeros((len(phylostrata), pmatrix.shape[0]))
-    for pk_idx, pk in enumerate(phylostrata):
-        pstrata_norm_by_sumx[pk_idx, ] = np.array(pmatrix[:, id_age_df_keep_subset['Phylostrata'].isin([pk])]
-                                                  .sum(1)).flatten()
-        pstrata_norm_by_pmatrix_sum[pk_idx, ] = np.array(pmatrix[:, id_age_df_keep_subset['Phylostrata']
-                                                         .isin([pk])].sum(1) / tei).flatten()
-    pstrata_norm_by_sumx_df = pd.DataFrame(pstrata_norm_by_sumx)
-    pstrata_norm_by_sumx_df['ps'] = phylostrata
-    pstrata_norm_by_sumx_df.set_index('ps',
-                                      inplace=True)
-    pstrata_norm_by_sumx_df.columns = adata.obs_names
-    pstrata_norm_by_pmatrix_sum_df = pd.DataFrame(pstrata_norm_by_pmatrix_sum)
-    pstrata_norm_by_pmatrix_sum_df['ps'] = phylostrata
-    pstrata_norm_by_pmatrix_sum_df.set_index('ps',
-                                             inplace=True)
-    pstrata_norm_by_pmatrix_sum_df.columns = adata.obs_names
-    if cumsum:
-        pstrata_norm_by_sumx_df = pstrata_norm_by_sumx_df.cumsum(0)
-        pstrata_norm_by_pmatrix_sum_df = pstrata_norm_by_pmatrix_sum_df.cumsum(0)
-    if group_by_obs is not None:
-        if adata.obs[group_by_obs].dtype.name == 'category':
-            obs_group_nan = pd.DataFrame(adata.obs[group_by_obs])
-        else:
-            obs_group_nan = pd.DataFrame(adata.obs[group_by_obs].fillna(obs_fillna))
-        if obs_type == 'mean':
-            pstrata_norm_by_sumx_df =\
-                pstrata_norm_by_sumx_df.transpose().groupby(obs_group_nan[group_by_obs]).mean().transpose()
-            pstrata_norm_by_pmatrix_sum_df =\
-                pstrata_norm_by_pmatrix_sum_df.transpose().groupby(obs_group_nan[group_by_obs]).mean().transpose()
-        if obs_type == 'median':
-            pstrata_norm_by_sumx_df =\
-                pstrata_norm_by_sumx_df.transpose().groupby(obs_group_nan[group_by_obs]).median().transpose()
-            pstrata_norm_by_pmatrix_sum_df =\
-                pstrata_norm_by_pmatrix_sum_df.transpose().groupby(obs_group_nan[group_by_obs]).median().transpose()
-        if obs_type == 'sum':
-            pstrata_norm_by_sumx_df =\
-                pstrata_norm_by_sumx_df.transpose().groupby(obs_group_nan[group_by_obs]).sum().transpose()
-            pstrata_norm_by_pmatrix_sum_df =\
-                pstrata_norm_by_pmatrix_sum_df.transpose().groupby(obs_group_nan[group_by_obs]).sum().transpose()
-        if obs_type == 'min':
-            pstrata_norm_by_sumx_df =\
-                pstrata_norm_by_sumx_df.transpose().groupby(obs_group_nan[group_by_obs]).min().transpose()
-            pstrata_norm_by_pmatrix_sum_df =\
-                pstrata_norm_by_pmatrix_sum_df.transpose().groupby(obs_group_nan[group_by_obs]).min().transpose()
-        if obs_type == 'max':
-            pstrata_norm_by_sumx_df =\
-                pstrata_norm_by_sumx_df.transpose().groupby(obs_group_nan[group_by_obs]).max().transpose()
-            pstrata_norm_by_pmatrix_sum_df =\
-                pstrata_norm_by_pmatrix_sum_df.transpose().groupby(obs_group_nan[group_by_obs]).max().transpose()
+    adata_pstrata_norm_by_sumx_df_chunks = []
+    adata_pstrata_norm_by_pmatrix_sum_df_chunks = []
+    for i in range(0, adata.shape[0], chunk_size):
+        adata_subset = adata[i:i+chunk_size]
+        var_names_df_chunk,\
+            id_age_df_keep_subset_chunk,\
+            adata_counts_chunk,\
+            var_names_subset_chunk,\
+            sumx_chunk,\
+            sumx_recd_chunk,\
+            ps_chunk,\
+            psd_chunk = _get_psd(adata=adata_subset,
+                                 gene_id=gene_id,
+                                 gene_age=gene_age,
+                                 keep=keep,
+                                 layer=layer,
+                                 normalize_total=normalize_total,
+                                 log1p=log1p,
+                                 target_sum=target_sum)
+        wmatrix_chunk = psd_chunk.dot(adata_counts_chunk.transpose()).transpose()
+        pmatrix_chunk = sumx_recd_chunk.dot(wmatrix_chunk)
+        tei_chunk = pmatrix_chunk.sum(1)
+        phylostrata_chunk = list(set(id_age_df_keep_subset_chunk['Phylostrata']))
+        pstrata_norm_by_sumx_chunk = np.zeros((len(phylostrata_chunk), pmatrix_chunk.shape[0]))
+        pstrata_norm_by_pmatrix_sum_chunk = np.zeros((len(phylostrata_chunk), pmatrix_chunk.shape[0]))
+        for pk_idx, pk in enumerate(phylostrata_chunk):
+            pstrata_norm_by_sumx_chunk[pk_idx, ] = np.array(pmatrix_chunk[:, id_age_df_keep_subset_chunk['Phylostrata'].isin([pk]).values]
+                                                            .sum(1)).flatten()
+            pstrata_norm_by_pmatrix_sum_chunk[pk_idx, ] = np.array(pmatrix_chunk[:, id_age_df_keep_subset_chunk['Phylostrata']
+                                                                   .isin([pk]).values].sum(1) / tei_chunk).flatten()
+        pstrata_norm_by_sumx_df_chunk = pd.DataFrame(pstrata_norm_by_sumx_chunk)
+        pstrata_norm_by_sumx_df_chunk['ps'] = phylostrata_chunk
+        pstrata_norm_by_sumx_df_chunk.set_index('ps',
+                                                inplace=True)
+        pstrata_norm_by_sumx_df_chunk.columns = adata_subset.obs_names
+        pstrata_norm_by_pmatrix_sum_df_chunk = pd.DataFrame(pstrata_norm_by_pmatrix_sum_chunk)
+        pstrata_norm_by_pmatrix_sum_df_chunk['ps'] = phylostrata_chunk
+        pstrata_norm_by_pmatrix_sum_df_chunk.set_index('ps',
+                                                       inplace=True)
+        pstrata_norm_by_pmatrix_sum_df_chunk.columns = adata_subset.obs_names
+        if cumsum:
+            pstrata_norm_by_sumx_df_chunk = pstrata_norm_by_sumx_df_chunk.cumsum(0)
+            pstrata_norm_by_pmatrix_sum_df_chunk = pstrata_norm_by_pmatrix_sum_df_chunk.cumsum(0)
+        if group_by_obs is not None:
+            if adata_subset.obs[group_by_obs].dtype.name == 'category':
+                obs_group_nan = pd.DataFrame(adata_subset.obs[group_by_obs])
+            else:
+                obs_group_nan = pd.DataFrame(adata_subset.obs[group_by_obs].fillna(obs_fillna))
+            if obs_type == 'mean':
+                pstrata_norm_by_sumx_df_chunk =\
+                    pstrata_norm_by_sumx_df_chunk.transpose().groupby(obs_group_nan[group_by_obs]).mean().transpose()
+                pstrata_norm_by_pmatrix_sum_df_chunk =\
+                    pstrata_norm_by_pmatrix_sum_df_chunk.transpose().groupby(obs_group_nan[group_by_obs]).mean().transpose()
+            if obs_type == 'median':
+                pstrata_norm_by_sumx_df_chunk =\
+                    pstrata_norm_by_sumx_df_chunk.transpose().groupby(obs_group_nan[group_by_obs]).median().transpose()
+                pstrata_norm_by_pmatrix_sum_df_chunk =\
+                    pstrata_norm_by_pmatrix_sum_df_chunk.transpose().groupby(obs_group_nan[group_by_obs]).median().transpose()
+            if obs_type == 'sum':
+                pstrata_norm_by_sumx_df_chunk =\
+                    pstrata_norm_by_sumx_df_chunk.transpose().groupby(obs_group_nan[group_by_obs]).sum().transpose()
+                pstrata_norm_by_pmatrix_sum_df_chunk =\
+                    pstrata_norm_by_pmatrix_sum_df_chunk.transpose().groupby(obs_group_nan[group_by_obs]).sum().transpose()
+            if obs_type == 'min':
+                pstrata_norm_by_sumx_df_chunk =\
+                    pstrata_norm_by_sumx_df_chunk.transpose().groupby(obs_group_nan[group_by_obs]).min().transpose()
+                pstrata_norm_by_pmatrix_sum_df_chunk =\
+                    pstrata_norm_by_pmatrix_sum_df_chunk.transpose().groupby(obs_group_nan[group_by_obs]).min().transpose()
+            if obs_type == 'max':
+                pstrata_norm_by_sumx_df_chunk =\
+                    pstrata_norm_by_sumx_df_chunk.transpose().groupby(obs_group_nan[group_by_obs]).max().transpose()
+                pstrata_norm_by_pmatrix_sum_df_chunk =\
+                    pstrata_norm_by_pmatrix_sum_df_chunk.transpose().groupby(obs_group_nan[group_by_obs]).max().transpose()
+        adata_pstrata_norm_by_sumx_df_chunks.append(pstrata_norm_by_sumx_df_chunk)
+        adata_pstrata_norm_by_pmatrix_sum_df_chunks.append(pstrata_norm_by_pmatrix_sum_df_chunk)
+    pstrata_norm_by_sumx_df = pd.concat(adata_pstrata_norm_by_sumx_df_chunks, axis=1)
+    pstrata_norm_by_pmatrix_sum_df = pd.concat(adata_pstrata_norm_by_pmatrix_sum_df_chunks, axis=1)
     if standard_scale is not None:
         if standard_scale == 0:
             pstrata_norm_by_sumx_df = pstrata_norm_by_sumx_df.apply(_min_max_to_01,
@@ -1054,7 +1064,8 @@ def get_ematrix(adata,
                 standard_scale=None,
                 normalize_total=True,
                 log1p=True,
-                target_sum=1e6):
+                target_sum=1e6,
+                chunk_size=100000):
     """
     This function computes expression profiles for all genes or group of genes 'group_by_var' (default: None).
 
@@ -1107,6 +1118,7 @@ def get_ematrix(adata,
     :param normalize_total: Normalize counts per cell.
     :param log1p: Logarithmize the data matrix.
     :param target_sum: After normalization, each observation (cell) has a total count equal to target_sum.
+    :param chunk_size: Number of chunks.
     :return: Expression profile DataFrame.
 
     :type adata: AnnData
@@ -1121,6 +1133,7 @@ def get_ematrix(adata,
     :type normalize_total: bool
     :type log1p: bool
     :type target_sum: float
+    :type chunk_size: int
     :rtype: pandas.DataFrame
 
     Example
@@ -1312,7 +1325,8 @@ def get_rematrix(adata,
                  standard_scale=None,
                  normalize_total=True,
                  log1p=True,
-                 target_sum=1e6):
+                 target_sum=1e6,
+                 chunk_size=100000):
     """
     This function computes relative expression profiles.
 
@@ -1364,6 +1378,7 @@ def get_rematrix(adata,
     :param normalize_total: Normalize counts per cell prior TEI calculation.
     :param log1p: Logarithmize the data matrix prior TEI calculation.
     :param target_sum: After normalization, each observation (cell) has a total count equal to target_sum.
+    :param chunk_size: Number of chunks.
     :return: Relative expression profile DataFrame.
 
     :type adata: AnnData
@@ -1380,6 +1395,7 @@ def get_rematrix(adata,
     :type normalize_total: bool
     :type log1p: bool
     :type target_sum: float
+    :type chunk_size: int
     :rtype: pandas.DataFrame
 
     Example
@@ -1695,7 +1711,8 @@ def mergeby_from_counts(adata,
                         max_expr=None,
                         normalize_total=False,
                         log1p=False,
-                        target_sum=1e6):
+                        target_sum=1e6,
+                        chunk_size=100000):
     """
     This function groups all counts of an existing AnnData object as an array based on variable or observation groups.
     The resulting pandas.DataFrame can be used to e.g. apply statistics or visualize the groups more easily.
@@ -1712,6 +1729,7 @@ def mergeby_from_counts(adata,
     :param normalize_total: Normalize counts per cell.
     :param log1p: Logarithmize the data matrix.
     :param target_sum: After normalization, each observation (cell) has a total count equal to target_sum.
+    :param chunk_size: Number of chunks.
     :return: List of three DataFrame. First DataFrame contains the grouped data (each cell contains a numpy.ndarray).
              Second DataFrame contains original variable and observation assignment and groupings.
 
@@ -1727,6 +1745,7 @@ def mergeby_from_counts(adata,
     :type normalize_total: bool
     :type log1p: bool
     :type target_sum: float
+    :type chunk_size: int
     :rtype: list
 
     Example
@@ -1926,6 +1945,7 @@ def get_e50(adata,
     :param normalize_total:
     :param log1p:
     :param target_sum:
+    :param chunk_size: Number of chunks.
     :param min_expr:
     :param max_expr:
     :return:
