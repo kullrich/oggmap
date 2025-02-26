@@ -14,7 +14,6 @@ import anndata as ad
 import scanpy as sc
 import seaborn as sns
 from alive_progress import alive_bar
-from statannot import add_stat_annotation
 from statannotations.Annotator import Annotator
 
 
