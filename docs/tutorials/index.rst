@@ -55,19 +55,61 @@ eggNOG database version 6.0 orthomaps
 
 Extracted orthomaps for all Eukaryota from `eggNOG database version 6.0 <http://eggnog6.embl.de/#/app/home>`_ can be downloaded here:
 
-`eggnog6_eukaryota_orthomaps.tsv.zip <https://zenodo.org/record/8360098/files/eggnog6_eukaryota_orthomaps.tsv.zip>`_
+`eggnog6_eukaryota_orthomaps.tsv.zip <https://zenodo.org/records/14911022/files/eggnog6_eukaryota_orthomaps.tsv.zip>`_
+
+.. code-block:: bash
+
+   # to get GTF from Mus musculus on Linux run:
+   wget https://zenodo.org/records/14911022/files/eggnog6_eukaryota_orthomaps.tsv.zip
+
+   # on Mac:
+   curl https://zenodo.org/records/14911022/files/eggnog6_eukaryota_orthomaps.tsv.zip --remote-name
 
 To get an orthomap for e.g. the species *Caenorhabditis elegans* (taxID: 6239):
 
-   ::
+.. code-block:: python
 
-       from oggmap import qlin, gtf2t2g, of2orthomap, orthomap2tei, datasets
        import pandas as pd
+       from oggmap import qlin, gtf2t2g, of2orthomap, orthomap2tei, datasets, ncbitax
        eggnog6_eukaryota_orthomaps = pd.read_csv('eggnog6_eukaryota_orthomaps.tsv.zip', delimiter='\t')
-       query_lineage = qlin.get_qlin(q='Caenorhabditis elegans')
+       query_lineage = qlin.get_qlin(q='Caenorhabditis elegans', dbname='taxadb.sqlite')
+
+.. code-block:: console
+
+   >>> query name: Caenorhabditis elegans
+   query taxID: 6239
+   query kingdom: Eukaryota
+   query lineage names:
+   ['root(1)', 'cellular organisms(131567)', 'Eukaryota(2759)', 'Opisthokonta(33154)',
+   'Metazoa(33208)', 'Eumetazoa(6072)', 'Bilateria(33213)', 'Protostomia(33317)',
+   'Ecdysozoa(1206794)', 'Nematoda(6231)', 'Chromadorea(119089)', 'Rhabditida(6236)',
+   'Rhabditina(2301116)', 'Rhabditomorpha(2301119)', 'Rhabditoidea(55879)',
+   'Rhabditidae(6243)', 'Peloderinae(55885)', 'Caenorhabditis(6237)', 'Caenorhabditis elegans(6239)']
+   query lineage:
+   [1, 131567, 2759, 33154, 33208, 6072, 33213, 33317, 1206794, 6231, 119089, 6236,
+   2301116, 2301119, 55879, 6243, 55885, 6237, 6239]
+
+.. code-block:: python
+
        query_orthomap = eggnog6_eukaryota_orthomaps[eggnog6_eukaryota_orthomaps['taxID']==query_lineage[1]]
        query_orthomap
 
+.. code-block:: console
+
+   >>>          taxID                    name             seqID  ... PStaxID              PSname  PScontinuity
+   13301320   6239  Caenorhabditis elegans   6239.C55B7.6a.1  ...  131567  cellular organisms           1.0
+   13301321   6239  Caenorhabditis elegans   6239.F14D12.5.1  ...  131567  cellular organisms           1.0
+   13301322   6239  Caenorhabditis elegans    6239.F41D9.5.1  ...  131567  cellular organisms           1.0
+   13301323   6239  Caenorhabditis elegans   6239.K12G11.1.1  ...  131567  cellular organisms           1.0
+   13301324   6239  Caenorhabditis elegans   6239.K12G11.2.1  ...  131567  cellular organisms           1.0
+   ...         ...                     ...               ...  ...     ...                 ...           ...
+   13319237   6239  Caenorhabditis elegans   6239.R09E12.8.1  ...    6237      Caenorhabditis           1.0
+   13319238   6239  Caenorhabditis elegans    6239.F39H2.1.1  ...  119089         Chromadorea           1.0
+   13319239   6239  Caenorhabditis elegans    6239.C32D5.9.1  ...    2759           Eukaryota           1.0
+   13319240   6239  Caenorhabditis elegans   6239.ZK593.6a.1  ...    2759           Eukaryota           1.0
+   13319241   6239  Caenorhabditis elegans  6239.F29C12.3b.1  ...    6231            Nematoda           1.0
+
+   [17922 rows x 8 columns]
 
 .. _tutorial-pre-calculated-orthomaps-plaza:
 

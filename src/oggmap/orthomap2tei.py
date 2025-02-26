@@ -923,6 +923,7 @@ def get_pstrata(adata,
     >>>     group_by_obs='embryo.time.bin')
     >>> # plot strata as lines
     >>> packer19_small_pstrata_grouped[0].transpose().plot.line(stacked=True, cmap='Accent')
+    >>> plt.show()
     >>> # plot heatmap using partial TEI values
     >>> sns.heatmap(packer19_small_pstrata_grouped[0], annot=True, cmap='viridis')
     >>> plt.show()
