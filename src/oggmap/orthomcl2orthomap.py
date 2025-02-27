@@ -46,7 +46,7 @@ def define_parser():
     parser = argparse.ArgumentParser(
         prog='orthomcl2orthomap',
         usage='%(prog)s [options] [<arguments>...]',
-        description='extract orthomap from orthomcl output for query species',
+        description='extract orthomap from OrthoMCL output for query species',
         epilog=orthomcl2orthomap_example,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     add_argparse_args(parser=parser)
@@ -62,11 +62,11 @@ def add_argparse_args(parser: argparse.ArgumentParser):
     :type parser: argparse.ArgumentParser
     """
     parser.add_argument('-tla',
-                        help='query species orthomcl short name (THREE_LETTER_ABBREV)')
+                        help='query species OrthoMCL short name (THREE_LETTER_ABBREV)')
     parser.add_argument('-sl',
-                        help='specify orthomcl species information file <genomeSummary_OrthoMCL-6.16.txt>')
+                        help='specify OrthoMCL species information file <genomeSummary_OrthoMCL-6.16.txt>')
     parser.add_argument('-og',
-                        help='specify orthomcl groups file <groups_OrthoMCL-6.16.txt>')
+                        help='specify OrthoMCL groups file <groups_OrthoMCL-6.16.txt>')
     parser.add_argument('-out',
                         help='specify output file <orthomap.tsv> (default: orthomap.tsv)',
                         default='orthomap.tsv')
@@ -80,10 +80,10 @@ def add_argparse_args(parser: argparse.ArgumentParser):
 
 def _get_species_tax_id(species_name_list, species_list):
     """
-    A helper function to map orthomcl species short name and species taxID.
+    A helper function to map OrthoMCL species short name and species taxID.
 
-    :param species_name_list: List of orthomcl species short names.
-    :param species_list: DataFrame with orthomcl species information.
+    :param species_name_list: List of OrthoMCL species short names.
+    :param species_list: DataFrame with OrthoMCL species information.
     :return: List of species taxID.
 
     :type species_name_list: list
@@ -100,10 +100,10 @@ def _get_species_tax_id(species_name_list, species_list):
 
 def _parse_orthomcl_groups(og, tla):
     """
-    A helper function to parse orthomcl groups.
+    A helper function to parse OrthoMCL groups.
 
-    :param og: Path to orthomcl groups <groups_OrthoMCL-6.16.txt> file.
-    :param tla: Query species orthomcl short name (THREE_LETTER_ABBREV).
+    :param og: Path to OrthoMCL groups <groups_OrthoMCL-6.16.txt> file.
+    :param tla: Query species OrthoMCL short name (THREE_LETTER_ABBREV).
     :return: DataFrame.
 
     :type og: string
@@ -140,9 +140,9 @@ def get_orthomcl_orthomap(tla,
     """
     This function return an orthomap for a given query species and orthomcl groups data.
 
-    :param tla: Query species orthomcl short name (THREE_LETTER_ABBREV).
-    :param sl: Path to orthomcl species information <genomeSummary_OrthoMCL-6.16.txt> file.
-    :param og: Path to orthomcl groups <groups_OrthoMCL-6.16.txt> file.
+    :param tla: Query species OrthoMCL short name (THREE_LETTER_ABBREV).
+    :param sl: Path to OrthoMCL species information <genomeSummary_OrthoMCL-6.16.txt> file.
+    :param og: Path to OrthoMCL groups <groups_OrthoMCL-6.16.txt> file.
     :param out: Path to output file.
     :param quiet: Specify if output should be quiet.
     :param continuity: Specify if continuity score should be calculated.
@@ -355,15 +355,15 @@ def main():
         sys.exit()
     if not args.tla:
         parser.print_help()
-        print('\nError <-tla>: Please specify query species orthomcl short name (THREE_LETTER_ABBREV)')
+        print('\nError <-tla>: Please specify query species OrthoMCL short name (THREE_LETTER_ABBREV)')
         sys.exit()
     if not args.sl:
         parser.print_help()
-        print('\nError <-sl>: Please specify orthomcl species information file <genomeSummary_OrthoMCL-6.16.txt>')
+        print('\nError <-sl>: Please specify OrthoMCL species information file <genomeSummary_OrthoMCL-6.16.txt>')
         sys.exit()
     if not args.og:
         parser.print_help()
-        print('\nError <-og>: Please specify orthomcl groups file <groups_OrthoMCL-6.16.txt>')
+        print('\nError <-og>: Please specify OrthoMCL groups file <groups_OrthoMCL-6.16.txt>')
         sys.exit()
     get_orthomcl_orthomap(tla=args.tla,
                           sl=args.sl,

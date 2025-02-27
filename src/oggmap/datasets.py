@@ -861,3 +861,47 @@ def mytai_example(datapath='.'):
                   out=datapath)
     adata = sc.read(mytai_example_filename)
     return adata
+
+
+def broccoli_example(datapath='.'):
+    """
+    Broccoli results (default settings) for translated coding sequences (CDS)
+    from four plant sepcies (keeping only longest isoforms)
+    A. lyrata, A. thaliana, C. hirsuta and C. rubella.
+
+    All files can be obtained from here:
+    https://doi.org/10.5281/zenodo.7242263
+
+    :param datapath: Path to safe dataset.
+    :return: Path to Broccoli.GeneCount file, OrthoGroups file and species list file.
+
+    :type datapath: str
+    :rtype: list of str
+
+    Example
+    -------
+    >>> from oggmap import datasets
+    >>> datasets.broccoli_example(datapath='.')
+    """
+    if not os.path.exists(datapath):
+        print('datapath does not exist, is created now')
+        os.makedirs(name=datapath)
+    oc_filename = os.path.join(datapath,
+                               'broccoli_example_table_OGs_protein_counts.txt')
+    og_filename = os.path.join(datapath,
+                               'broccoli_example_table_OGs_protein_names.txt')
+    sl_filename = os.path.join(datapath,
+                               'broccoli_example_species_list.tsv')
+    oc_url = 'https://zenodo.org/records/14935293/files/broccoli_example_table_OGs_protein_counts.txt'
+    og_url = 'https://zenodo.org/records/14935293/files/broccoli_example_table_OGs_protein_names.txt'
+    sl_url = 'https://zenodo.org/records/14935293/files/broccoli_example_species_list.tsv'
+
+    wget.download(url=oc_url,
+                  out=datapath)
+    wget.download(url=og_url,
+                  out=datapath)
+    wget.download(url=sl_url,
+                  out=datapath)
+    return [oc_filename,
+            og_filename,
+            sl_filename]

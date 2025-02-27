@@ -140,6 +140,25 @@ def define_parser():
     $ qlin -q "Mus musculus" \\
       -dbname taxadb.sqlite
     '''
+    broccoli2orthomap_example = '''broccoli2orthomap example:
+
+    # download Broccoli example:
+    $ wget https://zenodo.org/records/14935293/files/broccoli_example_table_OGs_protein_counts.txt
+    $ wget https://zenodo.org/records/14935293/files/broccoli_example_table_OGs_protein_names.txt
+    $ wget https://zenodo.org/records/14935293/files/broccoli_example_species_list.tsv
+    
+    # extract orthomap:
+    $ broccoli2orthomap -seqname proteome.selected_transcript.ath.fasta -qt 3702 \\
+      -sl broccoli_example_species_list.tsv \\
+      -oc broccoli_example_table_OGs_protein_counts.txt \\
+      -og broccoli_example_table_OGs_protein_names.txt \\
+      -dbname taxadb.sqlite
+    '''
+    broccoli2orthomap_parser = subparsers.add_parser(name='broccoli2orthomap',
+                                                     help='extract orthomap from Broccoli data for query species '
+                                                          '<broccoli2orthomap -h>',
+                                                     epilog=broccoli2orthomap_example,
+                                                     formatter_class=argparse.RawDescriptionHelpFormatter)
     cds2aa_parser = subparsers.add_parser(name='cds2aa',
                                           help='translate CDS to AA and optional retain longest isoform <cds2aa -h>',
                                           epilog=cds2aa_example,
@@ -176,6 +195,7 @@ def define_parser():
                                         help='get query lineage based on ncbi taxonomy <qlin -h>',
                                         epilog=qlin_example,
                                         formatter_class=argparse.RawDescriptionHelpFormatter)
+    broccoli2orthomap.add_argparse_args(parser=broccoli2orthomap_parser)
     cds2aa.add_argparse_args(parser=cds2aa_parser)
     eggnog2orthomap.add_argparse_args(parser=eggnog2orthomap_parser)
     gtf2t2g.add_argparse_args(parser=gtf2t2g_parser)
@@ -196,6 +216,41 @@ def main():
     if args.subcommand is None:
         parser.print_help()
         sys.exit()
+    if args.subcommand == 'broccoli2orthomap':
+        print(args)
+        if not args.dbname:
+            print('\nError <-dbname>: Please specify taxadb.sqlite file')
+            sys.exit()
+        if not args.seqname:
+            parser.print_help()
+            print('\nError <-seqname>: Please specify query species name in Broccoli and taxid')
+            sys.exit()
+        if not args.qt:
+            parser.print_help()
+            print('\nError <-qt>: Please specify query species taxid')
+            sys.exit()
+        if not args.sl:
+            parser.print_help()
+            print('\nError <-sl>: Please specify species list as <Broccoli name><tab><species taxid>')
+            sys.exit()
+        if not args.oc:
+            parser.print_help()
+            print('\nError <-oc>: Please specify Broccoli <table_OGs_protein_counts.txt> (see dir_step3 directory)')
+            sys.exit()
+        if not args.og:
+            parser.print_help()
+            print('\nError <-og>: Please specify Broccoli <table_OGs_protein_names.txt> (see dir_step3 directory)')
+            sys.exit()
+        of2orthomap.get_orthomap(seqname=args.seqname,
+                                 qt=args.qt,
+                                 sl=args.sl,
+                                 oc=args.oc,
+                                 og=args.og,
+                                 out=args.out,
+                                 quiet=False,
+                                 continuity=True,
+                                 overwrite=args.overwrite,
+                                 dbname=args.dbname)
     if args.subcommand == 'cds2aa':
         if args.o is None:
             sys.stderr.write(str(args))
@@ -227,9 +282,6 @@ def main():
             print("translated %i sequences" % count)
     if args.subcommand == 'eggnog2orthomap':
         print(args)
-        if not args.dbname:
-            print('\nError <-dbname>: Please specify taxadb.sqlite file')
-            sys.exit()
         if not args.dbname:
             print('\nError <-dbname>: Please specify taxadb.sqlite file')
             sys.exit()
@@ -290,7 +342,7 @@ def main():
             sys.exit()
         if not args.seqname:
             parser.print_help()
-            print('\nError <-seqname>: Please specify query species name in orthofinder and taxid')
+            print('\nError <-seqname>: Please specify query species name in OrthoFinder and taxid')
             sys.exit()
         if not args.qt:
             parser.print_help()
@@ -298,15 +350,15 @@ def main():
             sys.exit()
         if not args.sl:
             parser.print_help()
-            print('\nError <-sl>: Please specify species list as <orthofinder name><tab><species taxid>')
+            print('\nError <-sl>: Please specify species list as <OrthoFinder name><tab><species taxid>')
             sys.exit()
         if not args.oc:
             parser.print_help()
-            print('\nError <-oc>: Please specify orthofinder <Orthogroups.GeneCounts.tsv> (see Orthogroups directory)')
+            print('\nError <-oc>: Please specify OrthoFinder <Orthogroups.GeneCounts.tsv> (see Orthogroups directory)')
             sys.exit()
         if not args.og:
             parser.print_help()
-            print('\nError <-og>: Please specify orthofinder <Orthogroups.tsv> (see Orthogroups directory)')
+            print('\nError <-og>: Please specify OrthoFinder <Orthogroups.tsv> (see Orthogroups directory)')
             sys.exit()
         of2orthomap.get_orthomap(seqname=args.seqname,
                                  qt=args.qt,
@@ -325,15 +377,15 @@ def main():
             sys.exit()
         if not args.tla:
             parser.print_help()
-            print('\nError <-tla>: Please specify query species orthomcl short name (THREE_LETTER_ABBREV)')
+            print('\nError <-tla>: Please specify query species OrthoMCL short name (THREE_LETTER_ABBREV)')
             sys.exit()
         if not args.sl:
             parser.print_help()
-            print('\nError <-sl>: Please specify orthomcl species information file <genomeSummary_OrthoMCL-6.16.txt>')
+            print('\nError <-sl>: Please specify OrthoMCL species information file <genomeSummary_OrthoMCL-6.16.txt>')
             sys.exit()
         if not args.og:
             parser.print_help()
-            print('\nError <-og>: Please specify orthomcl groups file <groups_OrthoMCL-6.16.txt>')
+            print('\nError <-og>: Please specify OrthoMCL groups file <groups_OrthoMCL-6.16.txt>')
             sys.exit()
         orthomcl2orthomap.get_orthomcl_orthomap(tla=args.tla,
                                                 sl=args.sl,
