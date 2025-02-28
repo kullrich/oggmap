@@ -198,7 +198,7 @@ def get_orthomap(seqname,
         oc_species = oc_species.strip().split('\t')
     oc_qidx = [x for x, y in enumerate(oc_species) if y == seqname]
     if len(oc_qidx) == 0:
-        print('\nError <-qname>: query species name not in orthofinder results, please check spelling\n'
+        print('\nError <-qname>: query species name not in OrthoFinder results, please check spelling\n'
               'e.g. <head -1 Orthogroups.GeneCounts.tsv>')
         sys.exit()
     for oc_line in oc_lines:
@@ -253,7 +253,7 @@ def get_orthomap(seqname,
         og_species = og_species.strip().split('\t')
     og_qidx = [x for x, y in enumerate(og_species) if y == seqname]
     if len(oc_qidx) == 0:
-        print('\nError <-qname>: query species name not in orthofinder results, please check spelling\n'
+        print('\nError <-qname>: query species name not in OrthoFinder results, please check spelling\n'
               'e.g. <head -1 Orthogroups.tsv>')
         sys.exit()
     for og_line in og_lines:

@@ -14,7 +14,7 @@ import sys
 import zipfile
 import argparse
 import pandas as pd
-from oggmap import qlin
+from oggmap import of2orthomap, qlin
 
 
 def define_parser():
@@ -25,7 +25,7 @@ def define_parser():
 
     :rtype: argparse.ArgumentParser
     """
-    of2orthomap_example = '''broccoli2orthomap example:
+    broccoli2orthomap_example = '''broccoli2orthomap example:
 
     # download Broccoli example:
     $ wget https://zenodo.org/records/14935293/files/broccoli_example_table_OGs_protein_counts.txt
@@ -92,7 +92,7 @@ def get_broccoli_orthomap(seqname,
                           ncbi=None,
                           dbname=None):
     """
-    This function return an orthomap for a given query species and PLAZA gene family data.
+    This function return an orthomap for a given query species and Broccoli input data.
 
     :param qt: Query species taxID.
     :param sl: Path to species list file containing <Broccoli name><tab><species taxID>.
@@ -120,7 +120,20 @@ def get_broccoli_orthomap(seqname,
 
     Example
     -------
-    >>>
+    >>> from oggmap import datasets, broccoli2orthomap, of2orthomap, qlin
+    >>> datasets.broccoli_example(datapath='.')
+    >>> query_orthomap, orthofinder_species_list, of_species_abundance = broccoli2orthomap.get_broccoli_orthomap(
+    >>>     seqname='proteome.selected_transcript.ath.fasta',
+    >>>     qt='3702',
+    >>>     sl='broccoli_example_species_list.tsv',
+    >>>     oc='broccoli_example_table_OGs_protein_counts.txt',
+    >>>     og='broccoli_example_table_OGs_protein_names.txt',
+    >>>     out=None,
+    >>>     quiet=False,
+    >>>     continuity=True,
+    >>>     overwrite=True,
+    >>>     dbname='taxadb.sqlite')
+    >>> query_orthomap
     """
     outhandle = None
     og_continuity_score = None
@@ -142,76 +155,70 @@ def get_broccoli_orthomap(seqname,
                                sep='\t',
                                header=None,
                                comment='#')
-    species_list.columns = ['species', 'common_name', 'tax_id', 'source', 'data_provider', 'pubmed_id']
-    qt_species = list(species_list['species'][species_list['tax_id'] == int(qt)])
-    if len(qt_species) == 0:
-        print('\nError <-qt>: query species taxID not in PLAZA results, please check taxID.')
-        sys.exit()
-    ogs = pd.DataFrame(pd.read_csv(og,
-                                   sep='\t',
-                                   header=None,
-                                   comment='#'))
-    ogs.columns = ['gf_id', 'species', 'gene_id']
-    ogs_grouped = ogs.groupby('gf_id')['species'].apply(set).apply(list).apply(_get_species_tax_id,
-                                                                               species_list=species_list)
-    ogs_grouped_qt = pd.DataFrame(ogs_grouped[ogs_grouped.apply(lambda x: int(qt) in x)])
-    ogs_qt = ogs[ogs['gf_id'].isin(ogs_grouped_qt.index)]
-    ogs_qt_red = ogs_qt[ogs_qt['species'].isin(qt_species)]
-    ogs_qt_red_grouped = ogs_qt_red.groupby('gf_id')['gene_id'].apply(list)
-    ogs_grouped_qt['gene_id'] = ogs_qt_red_grouped
-    ogs_grouped_qt_species = np.sort(list(set([x[0] for x in ogs_grouped_qt['species'].to_dict().values()])))
-    ogs_grouped_qt_species_names = [qlin.get_qlin(qt=x,
-                                                  quiet=True,
-                                                  ncbi=ncbi)[0] for x in ogs_grouped_qt_species]
-    species_list_df = pd.DataFrame(ogs_grouped_qt_species_names,
-                                   columns=['species'])
-    species_list_df['taxID'] = ogs_grouped_qt_species
-    species_list_df['lineage'] = species_list_df.apply(lambda x: qlin.ncbi_get_lineage(qt=x.iloc[1],
-                                                                                       ncbi=ncbi),
-                                                       axis=1)
-    species_list_df['youngest_common'] = [qlin.get_youngest_common(qlineage,
-                                                                   x) for x in species_list_df.lineage]
-    species_list_df['youngest_name'] = [list(x.values())[0] for x in [qlin.ncbi_get_taxid_translator(qt_vec=[x],
-                                                                                                     ncbi=ncbi)
-                                                                      for x in list(species_list_df.youngest_common)]]
+    species_list.columns = ['species', 'taxID']
+    species_list['lineage'] = species_list.apply(lambda x: qlin.ncbi_get_lineage(qt=x.iloc[1],
+                                                                                 ncbi=ncbi),
+                                                 axis=1)
+    species_list['youngest_common'] = [qlin.get_youngest_common(qlineage, x) for x in species_list.lineage]
+    species_list['youngest_name'] = [list(x.values())[0] for x in [qlin.ncbi_get_taxid_translator(qt_vec=[x],
+                                                                                                  ncbi=ncbi)
+                                                                   for x in list(species_list.youngest_common)]]
     if not quiet:
+        print(seqname)
         print(qname)
         print(qt)
-        print(species_list_df)
+        print(species_list)
     youngest_common_counts_df = of2orthomap.get_youngest_common_counts(qlineage,
-                                                                       species_list_df)
+                                                                       species_list)
     for node in qlin.traverse_postorder(query_lineage_topo.root):
         if node.name:
             nsplit = node.name.split('/')
             if len(nsplit) == 3:
                 node.species_count = list(youngest_common_counts_df[youngest_common_counts_df.PStaxID.isin(
                     [int(nsplit[1])])].counts)[0]
-    #for node in query_lineage_topo.traverse('postorder'):
-    #    nsplit = node.name.split('/')
-    #    if len(nsplit) == 3:
-    #        node.add_feature('species_count',
-    #                         list(youngest_common_counts_df[youngest_common_counts_df.PStaxID.isin(
-    #                             [int(nsplit[1])])].counts)[0])
-    og_dict = {}
+    oc_og_dict = {}
     continuity_dict = {}
-    for og in ogs_grouped_qt.index:
-        og_hits = np.sort(
-            list(set(list(ogs_grouped_qt[ogs_grouped_qt.index.isin([og])]['species'].to_dict().values())[0])))
-        # get list of the youngest common between query and all other species
-        og_hits_youngest_common = list(species_list_df.youngest_common[
-                                           [x for x, y in enumerate(species_list_df.taxID)
-                                            if y in og_hits]])
-        # evaluate all youngest common nodes to retain the oldest of them and assign as the orthogroup
-        # ancestral state (gene age)
-        if len(og_hits_youngest_common) > 0:
-            og_oldest_common = qlin.get_oldest_common(qlineage,
-                                                      og_hits_youngest_common)
-            og_dict[og] = og_oldest_common
-            if continuity:
-                continuity_dict[og] = \
-                    of2orthomap.get_youngest_common_counts(qlineage,
-                                                           pd.DataFrame(og_hits_youngest_common,
-                                                                        columns=['youngest_common'])).counts
+    if os.path.basename(oc).split('.')[-1] == 'zip':
+        oc_zip = zipfile.Path(oc, at='.'.join(os.path.basename(oc).split('.')[:-1]))
+        oc_lines = oc_zip.open()
+    else:
+        oc_lines = open(oc,
+                        'r')
+    oc_species = next(oc_lines)
+    if type(oc_species) == bytes:
+        oc_species = oc_species.decode('utf-8').strip().split('\t')
+    else:
+        oc_species = oc_species.strip().split('\t')
+    oc_qidx = [x for x, y in enumerate(oc_species) if y == seqname]
+    if len(oc_qidx) == 0:
+        print('\nError <-qname>: query species name not in Broccoli results, please check spelling\n'
+              'e.g. <head -1 table_OGs_protein_counts.txt>')
+        sys.exit()
+    for oc_line in oc_lines:
+        if type(oc_line) == bytes:
+            oc_og = oc_line.decode('utf-8').strip().split('\t')
+        else:
+            oc_og = oc_line.strip().split('\t')
+        if int(oc_og[oc_qidx[0]]) == 0:
+            continue
+        if int(oc_og[oc_qidx[0]]) > 0:
+            oc_og_hits = [oc_species[x+1] for x, y in enumerate(oc_og[1::][::-1][1::][::-1]) if int(y) > 0]
+            # get list of the youngest common between query and all other species
+            oc_og_hits_youngest_common = list(species_list.youngest_common[
+                                                  [x for x, y in enumerate(species_list.species)
+                                                   if y in oc_og_hits]])
+            # evaluate all youngest common nodes to retain the oldest of them and assign as the orthogroup
+            # ancestral state (gene age)
+            if len(oc_og_hits_youngest_common) > 0:
+                oc_og_oldest_common = qlin.get_oldest_common(qlineage,
+                                                             oc_og_hits_youngest_common)
+                oc_og_dict[oc_og[0]] = oc_og_oldest_common
+                if continuity:
+                    continuity_dict[oc_og[0]] = of2orthomap.get_youngest_common_counts(
+                        qlineage,
+                        pd.DataFrame(oc_og_hits_youngest_common,
+                                     columns=['youngest_common'])).counts
+    oc_lines.close()
     if continuity:
         youngest_common_counts_df = youngest_common_counts_df.join(pd.DataFrame.from_dict(continuity_dict))
     omap = []
@@ -219,32 +226,57 @@ def get_broccoli_orthomap(seqname,
         if os.path.exists(out) and not overwrite:
             print('\nError <-overwrite>: output file exists, please set to True if it should be overwritten\n')
             sys.exit()
-        outhandle = open(out, 'w')
+        outhandle = open(out,
+                         'w')
         if continuity:
             outhandle.write('seqID\tOrthogroup\tPSnum\tPStaxID\tPSname\tPScontinuity\n')
         else:
             outhandle.write('seqID\tOrthogroup\tPSnum\tPStaxID\tPSname\n')
-    for og in ogs_grouped_qt.index:
-        og_tmp = ogs_grouped_qt[ogs_grouped_qt.index.isin([og])]
-        og_ps = qlineagenames[qlineagenames['PStaxID'] ==
-                              str(og_dict[og])].values.tolist()[0]
-        og_ps_join = '\t'.join(og_ps)
-        if continuity:
-            og_continuity_score = of2orthomap.get_continuity_score(og,
-                                                                   youngest_common_counts_df)
+    if os.path.basename(og).split('.')[-1] == 'zip':
+        og_zip = zipfile.Path(og,
+                              at='.'.join(os.path.basename(og).split('.')[:-1]))
+        og_lines = og_zip.open()
+    else:
+        og_lines = open(og,
+                        'r')
+    og_species = next(og_lines)
+    if type(og_species) == bytes:
+        og_species = og_species.decode('utf-8').strip().split('\t')
+    else:
+        og_species = og_species.strip().split('\t')
+    og_qidx = [x for x, y in enumerate(og_species) if y == seqname]
+    if len(oc_qidx) == 0:
+        print('\nError <-qname>: query species name not in Broccoli results, please check spelling\n'
+              'e.g. <head -1 table_OGs_protein_counts.txt>')
+        sys.exit()
+    for og_line in og_lines:
+        if type(og_line) == bytes:
+            og_og = og_line.decode('utf-8').strip().split('\t')
+        else:
+            og_og = og_line.strip().split('\t')
+        if og_og[0] not in oc_og_dict:
+            continue
+        else:
+            og_ps = qlineagenames[qlineagenames['PStaxID'] ==
+                                  str(oc_og_dict[og_og[0]])].values.tolist()[0]
+            og_ps_join = '\t'.join(og_ps)
+            if continuity:
+                og_continuity_score = of2orthomap.get_continuity_score(og_name=og_og[0],
+                                                                       youngest_common_counts_df=youngest_common_counts_df)
             if out:
                 if continuity:
-                    [outhandle.write(x.replace(' ', '') + '\t' + og + '\t' + og_ps_join + '\t' +
-                                     str(og_continuity_score) + '\n') for x in list(og_tmp['gene_id'])[0]]
+                    [outhandle.write(x.replace(' ', '') + '\t' + og_og[0] + '\t' + og_ps_join + '\t' +
+                                     str(og_continuity_score) + '\n') for x in og_og[og_qidx[0]].split(',')]
                 else:
-                    [outhandle.write(x.replace(' ', '') + '\t' + og + '\t' + og_ps_join + '\n')
-                     for x in list(og_tmp['gene_id'])[0]]
+                    [outhandle.write(x.replace(' ', '') + '\t' + og_og[0] + '\t' + og_ps_join + '\n')
+                     for x in og_og[og_qidx[0]].split(',')]
         if continuity:
-            omap += [[x.replace(' ', ''), og, og_ps[0], og_ps[1], og_ps[2], og_continuity_score]
-                     for x in list(og_tmp['gene_id'])[0]]
+            omap += [[x.replace(' ', ''), og_og[0], og_ps[0], og_ps[1], og_ps[2], og_continuity_score]
+                     for x in og_og[og_qidx[0]].split(',')]
         else:
-            omap += [[x.replace(' ', ''), og, og_ps[0], og_ps[1], og_ps[2]]
-                     for x in list(og_tmp['gene_id'])[0]]
+            omap += [[x.replace(' ', ''), og_og[0], og_ps[0], og_ps[1], og_ps[2]]
+                     for x in og_og[og_qidx[0]].split(',')]
+    og_lines.close()
     if out:
         outhandle.close()
     omap_df = pd.DataFrame(omap)
@@ -263,7 +295,7 @@ def get_broccoli_orthomap(seqname,
                            'PSname']
     omap_df['PSnum'] = [int(x) for x in list(omap_df['PSnum'])]
     return [omap_df,
-            species_list_df,
+            species_list,
             youngest_common_counts_df]
 
 
@@ -277,26 +309,36 @@ def main():
     if not args.dbname:
         print('\nError <-dbname>: Please specify taxadb.sqlite file')
         sys.exit()
+    if not args.seqname:
+        parser.print_help()
+        print('\nError <-seqname>: Please specify query species name in Broccoli and taxID')
+        sys.exit()
     if not args.qt:
         parser.print_help()
         print('\nError <-qt>: Please specify query species taxID')
         sys.exit()
     if not args.sl:
         parser.print_help()
-        print('\nError <-sl>: Please specify PLAZA species information file <species_information.csv>')
+        print('\nError <-sl>: Please specify species list as <Broccoli name><tab><species taxID>')
+        sys.exit()
+    if not args.oc:
+        parser.print_help()
+        print('\nError <-oc>: Please specify Broccoli <table_OGs_protein_counts.txt> (see dir_step3 directory)')
         sys.exit()
     if not args.og:
         parser.print_help()
-        print('\nError <-og>: Please specify PLAZA gene family file <genefamily_data.ORTHOFAM.csv> or '
-              '<genefamily_data.HOMFAM.csv>')
+        print('\nError <-og>: Please specify Broccoli <table_OGs_protein_names.txt> (see dir_step3 directory)')
         sys.exit()
-    get_plaza_orthomap(seqname=args.seqname,
-                       qt=args.qt,
-                       sl=args.sl,
-                       og=args.og,
-                       out=args.out,
-                       overwrite=args.overwrite,
-                       dbname=args.dbname)
+    get_broccoli_orthomap(seqname=args.seqname,
+                          qt=args.qt,
+                          sl=args.sl,
+                          oc=args.oc,
+                          og=args.og,
+                          out=args.out,
+                          quiet=False,
+                          continuity=True,
+                          overwrite=args.overwrite,
+                          dbname=args.dbname)
 
 
 if __name__ == '__main__':

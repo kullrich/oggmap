@@ -65,6 +65,7 @@ repository = "https://github.com/kullrich/oggmap"
 
 [project.scripts]
 oggmap = "oggmap.__main__:main"
+broccoli2orthomap = "oggmap.broccoli2orthomap:main"
 cds2aa = "oggmap.cds2aa:main"
 eggnog2orthomap = "oggmap.eggnog2orthomap:main"
 plaza2orthomap = "oggmap.plaza2orthomap:main"

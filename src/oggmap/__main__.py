@@ -14,7 +14,7 @@ import os
 import sys
 import argparse
 from Bio import SeqIO
-from oggmap import cds2aa, eggnog2orthomap, gtf2t2g, ncbitax, of2orthomap, orthomcl2orthomap, plaza2orthomap, qlin
+from oggmap import broccoli2orthomap, cds2aa, eggnog2orthomap, gtf2t2g, ncbitax, of2orthomap, orthomcl2orthomap, plaza2orthomap, qlin
 
 
 def define_parser():
