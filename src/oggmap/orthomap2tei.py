@@ -1474,53 +1474,53 @@ def get_rematrix(adata,
     if use == 'pmatrix':
         for pk_idx, pk in enumerate(phylostrata):
             if var_type == 'mean':
-                rematrix[pk_idx, ] = np.array(pmatrix[:, id_age_df_keep_subset['Phylostrata'].isin([pk])]
+                rematrix[pk_idx, ] = np.array(pmatrix[:, id_age_df_keep_subset['Phylostrata'].isin([pk]).values]
                                               .mean(1)).flatten()
             if var_type == 'median':
                 rematrix[pk_idx, ] = np.apply_along_axis(
-                    np.median, 1, pmatrix[:, id_age_df_keep_subset['Phylostrata'].isin([pk])].toarray()).flatten()
+                    np.median, 1, pmatrix[:, id_age_df_keep_subset['Phylostrata'].isin([pk]).values].toarray()).flatten()
             if var_type == 'sum':
-                rematrix[pk_idx, ] = np.array(pmatrix[:, id_age_df_keep_subset['Phylostrata'].isin([pk])]
+                rematrix[pk_idx, ] = np.array(pmatrix[:, id_age_df_keep_subset['Phylostrata'].isin([pk]).values]
                                               .sum(1)).flatten()
             if var_type == 'min':
-                rematrix[pk_idx, ] = np.array(pmatrix[:, id_age_df_keep_subset['Phylostrata'].isin([pk])]
+                rematrix[pk_idx, ] = np.array(pmatrix[:, id_age_df_keep_subset['Phylostrata'].isin([pk]).values]
                                               .min(1).toarray()).flatten()
             if var_type == 'max':
-                rematrix[pk_idx, ] = np.array(pmatrix[:, id_age_df_keep_subset['Phylostrata'].isin([pk])]
+                rematrix[pk_idx, ] = np.array(pmatrix[:, id_age_df_keep_subset['Phylostrata'].isin([pk]).values]
                                               .max(1).toarray()).flatten()
     elif use == 'wmatrix':
         for pk_idx, pk in enumerate(phylostrata):
             if var_type == 'mean':
-                rematrix[pk_idx, ] = np.array(wmatrix[:, id_age_df_keep_subset['Phylostrata'].isin([pk])]
+                rematrix[pk_idx, ] = np.array(wmatrix[:, id_age_df_keep_subset['Phylostrata'].isin([pk]).values]
                                               .mean(1)).flatten()
             if var_type == 'median':
                 rematrix[pk_idx, ] = np.apply_along_axis(
-                    np.median, 1, wmatrix[:, id_age_df_keep_subset['Phylostrata'].isin([pk])].toarray()).flatten()
+                    np.median, 1, wmatrix[:, id_age_df_keep_subset['Phylostrata'].isin([pk]).values].toarray()).flatten()
             if var_type == 'sum':
-                rematrix[pk_idx, ] = np.array(wmatrix[:, id_age_df_keep_subset['Phylostrata'].isin([pk])]
+                rematrix[pk_idx, ] = np.array(wmatrix[:, id_age_df_keep_subset['Phylostrata'].isin([pk]).values]
                                               .sum(1)).flatten()
             if var_type == 'min':
-                rematrix[pk_idx, ] = np.array(wmatrix[:, id_age_df_keep_subset['Phylostrata'].isin([pk])]
+                rematrix[pk_idx, ] = np.array(wmatrix[:, id_age_df_keep_subset['Phylostrata'].isin([pk]).values]
                                               .min(1).toarray()).flatten()
             if var_type == 'max':
-                rematrix[pk_idx, ] = np.array(wmatrix[:, id_age_df_keep_subset['Phylostrata'].isin([pk])]
+                rematrix[pk_idx, ] = np.array(wmatrix[:, id_age_df_keep_subset['Phylostrata'].isin([pk]).values]
                                               .max(1).toarray()).flatten()
     else:
         for pk_idx, pk in enumerate(phylostrata):
             if var_type == 'mean':
-                rematrix[pk_idx, ] = np.array(adata_counts[:, id_age_df_keep_subset['Phylostrata'].isin([pk])]
+                rematrix[pk_idx, ] = np.array(adata_counts[:, id_age_df_keep_subset['Phylostrata'].isin([pk]).values]
                                               .mean(1)).flatten()
             if var_type == 'median':
                 rematrix[pk_idx, ] = np.apply_along_axis(
-                    np.median, 1, adata_counts[:, id_age_df_keep_subset['Phylostrata'].isin([pk])].toarray()).flatten()
+                    np.median, 1, adata_counts[:, id_age_df_keep_subset['Phylostrata'].isin([pk]).values].toarray()).flatten()
             if var_type == 'sum':
-                rematrix[pk_idx, ] = np.array(adata_counts[:, id_age_df_keep_subset['Phylostrata'].isin([pk])]
+                rematrix[pk_idx, ] = np.array(adata_counts[:, id_age_df_keep_subset['Phylostrata'].isin([pk]).values]
                                               .sum(1)).flatten()
             if var_type == 'min':
-                rematrix[pk_idx, ] = np.array(adata_counts[:, id_age_df_keep_subset['Phylostrata'].isin([pk])]
+                rematrix[pk_idx, ] = np.array(adata_counts[:, id_age_df_keep_subset['Phylostrata'].isin([pk]).values]
                                               .min(1).toarray()).flatten()
             if var_type == 'max':
-                rematrix[pk_idx, ] = np.array(adata_counts[:, id_age_df_keep_subset['Phylostrata'].isin([pk])]
+                rematrix[pk_idx, ] = np.array(adata_counts[:, id_age_df_keep_subset['Phylostrata'].isin([pk]).values]
                                               .max(1).toarray()).flatten()
     rematrix_df = pd.DataFrame(rematrix)
     rematrix_df['ps'] = phylostrata
